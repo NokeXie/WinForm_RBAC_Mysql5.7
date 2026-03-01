@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Configuration;
 using System.Data.SqlClient;
 using System.Windows.Forms;
@@ -32,7 +31,7 @@ namespace DXWinForm
             string passwordHash = PasswordHasher.HashPassword(password);
 
             // 多对多：用户 → UserRoles → Roles → RolePermissions → Permissions
-            
+
             const string sql = @"
                 SELECT p.PermissionCode
                 FROM Users u

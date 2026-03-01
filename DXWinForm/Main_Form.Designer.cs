@@ -30,6 +30,21 @@ namespace DXWinForm
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
+            DevExpress.DataAccess.Sql.SelectQuery selectQuery2 = new DevExpress.DataAccess.Sql.SelectQuery();
+            DevExpress.DataAccess.Sql.Column column4 = new DevExpress.DataAccess.Sql.Column();
+            DevExpress.DataAccess.Sql.ColumnExpression columnExpression4 = new DevExpress.DataAccess.Sql.ColumnExpression();
+            DevExpress.DataAccess.Sql.Table table4 = new DevExpress.DataAccess.Sql.Table();
+            DevExpress.DataAccess.Sql.Column column5 = new DevExpress.DataAccess.Sql.Column();
+            DevExpress.DataAccess.Sql.ColumnExpression columnExpression5 = new DevExpress.DataAccess.Sql.ColumnExpression();
+            DevExpress.DataAccess.Sql.Table table5 = new DevExpress.DataAccess.Sql.Table();
+            DevExpress.DataAccess.Sql.Column column6 = new DevExpress.DataAccess.Sql.Column();
+            DevExpress.DataAccess.Sql.ColumnExpression columnExpression6 = new DevExpress.DataAccess.Sql.ColumnExpression();
+            DevExpress.DataAccess.Sql.Join join3 = new DevExpress.DataAccess.Sql.Join();
+            DevExpress.DataAccess.Sql.RelationColumnInfo relationColumnInfo3 = new DevExpress.DataAccess.Sql.RelationColumnInfo();
+            DevExpress.DataAccess.Sql.Table table6 = new DevExpress.DataAccess.Sql.Table();
+            DevExpress.DataAccess.Sql.Join join4 = new DevExpress.DataAccess.Sql.Join();
+            DevExpress.DataAccess.Sql.RelationColumnInfo relationColumnInfo4 = new DevExpress.DataAccess.Sql.RelationColumnInfo();
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Main_Form));
             this.主菜单 = new DevExpress.XtraBars.BarManager(this.components);
             this.bar2 = new DevExpress.XtraBars.Bar();
             this.系统管理 = new DevExpress.XtraBars.BarSubItem();
@@ -50,15 +65,26 @@ namespace DXWinForm
             this.btnEditUser = new DevExpress.XtraEditors.SimpleButton();
             this.btnAddUser = new DevExpress.XtraEditors.SimpleButton();
             this.gridControl1 = new DevExpress.XtraGrid.GridControl();
+            this.sqlDataSource1 = new DevExpress.DataAccess.Sql.SqlDataSource(this.components);
             this.gridView1 = new DevExpress.XtraGrid.Views.Grid.GridView();
+            this.col用户名 = new DevExpress.XtraGrid.Columns.GridColumn();
+            this.col角色名 = new DevExpress.XtraGrid.Columns.GridColumn();
+            this.col开启状态 = new DevExpress.XtraGrid.Columns.GridColumn();
             this.layoutControlGroup1 = new DevExpress.XtraLayout.LayoutControlGroup();
             this.layoutControlItem2 = new DevExpress.XtraLayout.LayoutControlItem();
             this.layoutControlItem3 = new DevExpress.XtraLayout.LayoutControlItem();
             this.layoutControlItem4 = new DevExpress.XtraLayout.LayoutControlItem();
             this.layoutControlItem5 = new DevExpress.XtraLayout.LayoutControlItem();
             this.角色管理 = new DevExpress.XtraTab.XtraTabPage();
+            this.layoutControl3 = new DevExpress.XtraLayout.LayoutControl();
+            this.listBoxControl1 = new DevExpress.XtraEditors.ListBoxControl();
+            this.treeList1 = new DevExpress.XtraTreeList.TreeList();
+            this.layoutControlGroup2 = new DevExpress.XtraLayout.LayoutControlGroup();
+            this.layoutControlItem6 = new DevExpress.XtraLayout.LayoutControlItem();
+            this.layoutControlItem7 = new DevExpress.XtraLayout.LayoutControlItem();
             this.Root = new DevExpress.XtraLayout.LayoutControlGroup();
             this.layoutControlItem1 = new DevExpress.XtraLayout.LayoutControlItem();
+            this.barSubItem1 = new DevExpress.XtraBars.BarSubItem();
             ((System.ComponentModel.ISupportInitialize)(this.主菜单)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControl1)).BeginInit();
             this.layoutControl1.SuspendLayout();
@@ -74,6 +100,14 @@ namespace DXWinForm
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem3)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem4)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem5)).BeginInit();
+            this.角色管理.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.layoutControl3)).BeginInit();
+            this.layoutControl3.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.listBoxControl1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.treeList1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.layoutControlGroup2)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem6)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem7)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.Root)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem1)).BeginInit();
             this.SuspendLayout();
@@ -93,9 +127,10 @@ namespace DXWinForm
             this.barButtonItem1,
             this.barButtonItem2,
             this.barButtonItem3,
-            this.barButtonItem4});
+            this.barButtonItem4,
+            this.barSubItem1});
             this.主菜单.MainMenu = this.bar2;
-            this.主菜单.MaxItemId = 5;
+            this.主菜单.MaxItemId = 8;
             this.主菜单.StatusBar = this.bar3;
             // 
             // bar2
@@ -105,7 +140,8 @@ namespace DXWinForm
             this.bar2.DockRow = 0;
             this.bar2.DockStyle = DevExpress.XtraBars.BarDockStyle.Top;
             this.bar2.LinksPersistInfo.AddRange(new DevExpress.XtraBars.LinkPersistInfo[] {
-            new DevExpress.XtraBars.LinkPersistInfo(this.系统管理)});
+            new DevExpress.XtraBars.LinkPersistInfo(this.系统管理),
+            new DevExpress.XtraBars.LinkPersistInfo(this.barSubItem1)});
             this.bar2.OptionsBar.MultiLine = true;
             this.bar2.OptionsBar.UseWholeRow = true;
             this.bar2.Text = "Main menu";
@@ -136,6 +172,7 @@ namespace DXWinForm
             this.barButtonItem2.Id = 2;
             this.barButtonItem2.Name = "barButtonItem2";
             this.barButtonItem2.Tag = "SystemManger.RoleManger";
+            this.barButtonItem2.ItemClick += new DevExpress.XtraBars.ItemClickEventHandler(this.barButtonItem2_ItemClick);
             // 
             // barButtonItem3
             // 
@@ -270,6 +307,8 @@ namespace DXWinForm
             // 
             // gridControl1
             // 
+            this.gridControl1.DataMember = "Users";
+            this.gridControl1.DataSource = this.sqlDataSource1;
             this.gridControl1.Location = new System.Drawing.Point(12, 12);
             this.gridControl1.MainView = this.gridView1;
             this.gridControl1.MenuManager = this.主菜单;
@@ -279,10 +318,80 @@ namespace DXWinForm
             this.gridControl1.ViewCollection.AddRange(new DevExpress.XtraGrid.Views.Base.BaseView[] {
             this.gridView1});
             // 
+            // sqlDataSource1
+            // 
+            this.sqlDataSource1.ConnectionName = "DataBase_Noke_system";
+            this.sqlDataSource1.Name = "sqlDataSource1";
+            column4.Alias = "用户名";
+            columnExpression4.ColumnName = "UserName";
+            table4.MetaSerializable = "<Meta X=\"30\" Y=\"30\" Width=\"125\" Height=\"143\" />";
+            table4.Name = "Users";
+            columnExpression4.Table = table4;
+            column4.Expression = columnExpression4;
+            column5.Alias = "角色名";
+            columnExpression5.ColumnName = "RoleName";
+            table5.MetaSerializable = "<Meta X=\"340\" Y=\"30\" Width=\"125\" Height=\"103\" />";
+            table5.Name = "Roles";
+            columnExpression5.Table = table5;
+            column5.Expression = columnExpression5;
+            column6.Alias = "开启状态";
+            columnExpression6.ColumnName = "Enable";
+            columnExpression6.Table = table4;
+            column6.Expression = columnExpression6;
+            selectQuery2.Columns.Add(column4);
+            selectQuery2.Columns.Add(column5);
+            selectQuery2.Columns.Add(column6);
+            selectQuery2.Name = "Users";
+            relationColumnInfo3.NestedKeyColumn = "UserID";
+            relationColumnInfo3.ParentKeyColumn = "UserID";
+            join3.KeyColumns.Add(relationColumnInfo3);
+            table6.MetaSerializable = "<Meta X=\"185\" Y=\"30\" Width=\"125\" Height=\"103\" />";
+            table6.Name = "UserRoles";
+            join3.Nested = table6;
+            join3.Parent = table4;
+            relationColumnInfo4.NestedKeyColumn = "RoleID";
+            relationColumnInfo4.ParentKeyColumn = "RoleID";
+            join4.KeyColumns.Add(relationColumnInfo4);
+            join4.Nested = table5;
+            join4.Parent = table6;
+            selectQuery2.Relations.Add(join3);
+            selectQuery2.Relations.Add(join4);
+            selectQuery2.Tables.Add(table4);
+            selectQuery2.Tables.Add(table6);
+            selectQuery2.Tables.Add(table5);
+            this.sqlDataSource1.Queries.AddRange(new DevExpress.DataAccess.Sql.SqlQuery[] {
+            selectQuery2});
+            this.sqlDataSource1.ResultSchemaSerializable = resources.GetString("sqlDataSource1.ResultSchemaSerializable");
+            // 
             // gridView1
             // 
+            this.gridView1.Columns.AddRange(new DevExpress.XtraGrid.Columns.GridColumn[] {
+            this.col用户名,
+            this.col角色名,
+            this.col开启状态});
             this.gridView1.GridControl = this.gridControl1;
             this.gridView1.Name = "gridView1";
+            // 
+            // col用户名
+            // 
+            this.col用户名.FieldName = "用户名";
+            this.col用户名.Name = "col用户名";
+            this.col用户名.Visible = true;
+            this.col用户名.VisibleIndex = 0;
+            // 
+            // col角色名
+            // 
+            this.col角色名.FieldName = "角色名";
+            this.col角色名.Name = "col角色名";
+            this.col角色名.Visible = true;
+            this.col角色名.VisibleIndex = 1;
+            // 
+            // col开启状态
+            // 
+            this.col开启状态.FieldName = "开启状态";
+            this.col开启状态.Name = "col开启状态";
+            this.col开启状态.Visible = true;
+            this.col开启状态.VisibleIndex = 2;
             // 
             // layoutControlGroup1
             // 
@@ -335,9 +444,68 @@ namespace DXWinForm
             // 
             // 角色管理
             // 
+            this.角色管理.Controls.Add(this.layoutControl3);
             this.角色管理.Name = "角色管理";
             this.角色管理.Size = new System.Drawing.Size(1219, 654);
             this.角色管理.Text = "角色管理";
+            // 
+            // layoutControl3
+            // 
+            this.layoutControl3.Controls.Add(this.listBoxControl1);
+            this.layoutControl3.Controls.Add(this.treeList1);
+            this.layoutControl3.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.layoutControl3.Location = new System.Drawing.Point(0, 0);
+            this.layoutControl3.Name = "layoutControl3";
+            this.layoutControl3.Root = this.layoutControlGroup2;
+            this.layoutControl3.Size = new System.Drawing.Size(1219, 654);
+            this.layoutControl3.TabIndex = 0;
+            this.layoutControl3.Text = "layoutControl3";
+            // 
+            // listBoxControl1
+            // 
+            this.listBoxControl1.Location = new System.Drawing.Point(12, 12);
+            this.listBoxControl1.Name = "listBoxControl1";
+            this.listBoxControl1.Size = new System.Drawing.Size(273, 630);
+            this.listBoxControl1.StyleController = this.layoutControl3;
+            this.listBoxControl1.TabIndex = 5;
+            this.listBoxControl1.SelectedIndexChanged += new System.EventHandler(this.listBoxControl1_SelectedIndexChanged);
+            // 
+            // treeList1
+            // 
+            this.treeList1.Location = new System.Drawing.Point(289, 12);
+            this.treeList1.MenuManager = this.主菜单;
+            this.treeList1.Name = "treeList1";
+            this.treeList1.Size = new System.Drawing.Size(918, 630);
+            this.treeList1.TabIndex = 4;
+            // 
+            // layoutControlGroup2
+            // 
+            this.layoutControlGroup2.EnableIndentsWithoutBorders = DevExpress.Utils.DefaultBoolean.True;
+            this.layoutControlGroup2.GroupBordersVisible = false;
+            this.layoutControlGroup2.Items.AddRange(new DevExpress.XtraLayout.BaseLayoutItem[] {
+            this.layoutControlItem6,
+            this.layoutControlItem7});
+            this.layoutControlGroup2.Name = "layoutControlGroup2";
+            this.layoutControlGroup2.Size = new System.Drawing.Size(1219, 654);
+            this.layoutControlGroup2.TextVisible = false;
+            // 
+            // layoutControlItem6
+            // 
+            this.layoutControlItem6.Control = this.treeList1;
+            this.layoutControlItem6.Location = new System.Drawing.Point(277, 0);
+            this.layoutControlItem6.Name = "layoutControlItem6";
+            this.layoutControlItem6.Size = new System.Drawing.Size(922, 634);
+            this.layoutControlItem6.TextSize = new System.Drawing.Size(0, 0);
+            this.layoutControlItem6.TextVisible = false;
+            // 
+            // layoutControlItem7
+            // 
+            this.layoutControlItem7.Control = this.listBoxControl1;
+            this.layoutControlItem7.Location = new System.Drawing.Point(0, 0);
+            this.layoutControlItem7.Name = "layoutControlItem7";
+            this.layoutControlItem7.Size = new System.Drawing.Size(277, 634);
+            this.layoutControlItem7.TextSize = new System.Drawing.Size(0, 0);
+            this.layoutControlItem7.TextVisible = false;
             // 
             // Root
             // 
@@ -357,6 +525,13 @@ namespace DXWinForm
             this.layoutControlItem1.Size = new System.Drawing.Size(1227, 684);
             this.layoutControlItem1.TextSize = new System.Drawing.Size(0, 0);
             this.layoutControlItem1.TextVisible = false;
+            // 
+            // barSubItem1
+            // 
+            this.barSubItem1.Caption = "人事系统";
+            this.barSubItem1.Id = 7;
+            this.barSubItem1.Name = "barSubItem1";
+            this.barSubItem1.Tag = "renshManger";
             // 
             // Main_Form
             // 
@@ -387,6 +562,14 @@ namespace DXWinForm
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem3)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem4)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem5)).EndInit();
+            this.角色管理.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.layoutControl3)).EndInit();
+            this.layoutControl3.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)(this.listBoxControl1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.treeList1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.layoutControlGroup2)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem6)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem7)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.Root)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem1)).EndInit();
             this.ResumeLayout(false);
@@ -420,10 +603,21 @@ namespace DXWinForm
         private DevExpress.XtraLayout.LayoutControlItem layoutControlItem3;
         private DevExpress.XtraLayout.LayoutControlItem layoutControlItem4;
         private DevExpress.XtraLayout.LayoutControlItem layoutControlItem5;
-        private DevExpress.XtraTab.XtraTabPage 角色管理;
         private DevExpress.XtraLayout.LayoutControlGroup Root;
         private DevExpress.XtraLayout.LayoutControlItem layoutControlItem1;
         private DevExpress.XtraBars.BarButtonItem barButtonItem3;
         private DevExpress.XtraBars.BarButtonItem barButtonItem4;
+        private DevExpress.DataAccess.Sql.SqlDataSource sqlDataSource1;
+        private DevExpress.XtraGrid.Columns.GridColumn col用户名;
+        private DevExpress.XtraGrid.Columns.GridColumn col角色名;
+        private DevExpress.XtraGrid.Columns.GridColumn col开启状态;
+        private DevExpress.XtraTab.XtraTabPage 角色管理;
+        private DevExpress.XtraLayout.LayoutControl layoutControl3;
+        private DevExpress.XtraTreeList.TreeList treeList1;
+        private DevExpress.XtraLayout.LayoutControlGroup layoutControlGroup2;
+        private DevExpress.XtraLayout.LayoutControlItem layoutControlItem6;
+        private DevExpress.XtraEditors.ListBoxControl listBoxControl1;
+        private DevExpress.XtraLayout.LayoutControlItem layoutControlItem7;
+        private DevExpress.XtraBars.BarSubItem barSubItem1;
     }
 }
