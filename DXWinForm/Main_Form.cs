@@ -159,6 +159,66 @@ namespace DXWinForm
             }
         }
 
+        private void btnSavePermissions_Click(object sender, EventArgs e)
+        {
+            if (listBoxControl1.SelectedItem is DevExpress.XtraEditors.Controls.ImageListBoxItem item)
+            {
+                int roleId = Convert.ToInt32(item.Tag);
 
+                // 获取选中的权限
+                List<string> selectedPermissions = new List<string>();
+                foreach (DevExpress.XtraTreeList.Nodes.TreeListNode node in treeList1.Nodes)
+                {
+                    CollectCheckedPermissions(node, selectedPermissions);
+                }
+
+                // 保存到数据库
+                SaveRolePermissions(roleId, selectedPermissions);
+
+                XtraMessageBox.Show("权限保存成功！", "提示");
+            }
+        }
+        private void CollectCheckedPermissions(DevExpress.XtraTreeList.Nodes.TreeListNode node, List<string> list)
+        {
+            string code = node["PermissionCode"]?.ToString();
+            if (!string.IsNullOrEmpty(code) && node.Checked)
+            {
+                list.Add(code);
+            }
+
+            foreach (DevExpress.XtraTreeList.Nodes.TreeListNode child in node.Nodes)
+            {
+                CollectCheckedPermissions(child, list);
+            }
+        }
+        private void SaveRolePermissions(int roleId, List<string> permissionCodes)
+        {
+            using (SqlConnection conn = new SqlConnection(connectionString))
+            {
+                conn.Open();
+
+                // 1. 删除已有权限
+                using (SqlCommand delCmd = new SqlCommand("DELETE FROM RolePermissions WHERE RoleID = @RoleID", conn))
+                {
+                    delCmd.Parameters.AddWithValue("@RoleID", roleId);
+                    delCmd.ExecuteNonQuery();
+                }
+
+                // 2. 插入新权限
+                string insertSql = "INSERT INTO RolePermissions(RoleID, PermissionCode) VALUES(@RoleID, @PermissionCode)";
+                using (SqlCommand insCmd = new SqlCommand(insertSql, conn))
+                {
+                    insCmd.Parameters.Add("@RoleID", System.Data.SqlDbType.Int);
+                    insCmd.Parameters.Add("@PermissionCode", System.Data.SqlDbType.VarChar, 50);
+
+                    foreach (var code in permissionCodes)
+                    {
+                        insCmd.Parameters["@RoleID"].Value = roleId;
+                        insCmd.Parameters["@PermissionCode"].Value = code;
+                        insCmd.ExecuteNonQuery();
+                    }
+                }
+            }
+        }
     }
 }

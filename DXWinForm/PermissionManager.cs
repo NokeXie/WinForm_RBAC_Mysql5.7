@@ -24,7 +24,7 @@ namespace DXWinForm
         }
 
         // =====================================================================
-        // 核心流程：同步权限到数据库
+        // 核心流程：同步权限到数据库 (更新 + 清理)
         // =====================================================================
         public void SyncModulesToDatabase()
         {
@@ -38,7 +38,11 @@ namespace DXWinForm
             foreach (var kv in permDict)
                 finalDict[kv.Key] = Tuple.Create(kv.Value, InferParentCode(kv.Key, permDict));
 
+            // 1. 将 UI 上的 Tag 同步到数据库 (MERGE)
             SavePermissionsToDatabase(finalDict);
+
+            // 2. --- 新增：清理数据库中已不存在的 Tag ---
+            RemoveOrphanedPermissions(finalDict.Keys.ToList());
         }
 
         // =====================================================================
@@ -120,9 +124,27 @@ namespace DXWinForm
             foreach (Control ctrl in controls)
             {
                 string code = ctrl.Tag?.ToString();
-                if (!string.IsNullOrWhiteSpace(code))
-                    ctrl.Enabled = UserSession.HasPermission(code);
 
+                if (!string.IsNullOrWhiteSpace(code))
+                {
+                    // 有 Tag 的控件按权限判断
+                    ctrl.Enabled = UserSession.HasPermission(code);
+                }
+                else
+                {
+                    // 没有 Tag 的按钮类控件默认不可用
+                    if (ctrl is ButtonBase || ctrl.GetType().Name.Contains("Button"))
+                    {
+                        ctrl.Enabled = false;
+                    }
+                    else
+                    {
+                        // 其他控件保持默认状态
+                        ctrl.Enabled = true;
+                    }
+                }
+
+                // 递归处理子控件
                 if (ctrl.HasChildren)
                     ApplyControlPermissions(ctrl.Controls);
             }
@@ -169,6 +191,45 @@ namespace DXWinForm
             {
                 OnLog?.Invoke($"同步数据库失败：{ex.Message}");
                 MessageBox.Show($"同步数据库失败：{ex.Message}");
+            }
+        }
+
+        // --- 新增：清理孤立的权限记录 ---
+        private void RemoveOrphanedPermissions(List<string> currentTags)
+        {
+            if (currentTags.Count == 0) return;
+
+            try
+            {
+                using (var conn = new SqlConnection(_connectionString))
+                {
+                    conn.Open();
+
+                    // 构建一个 NOT IN 的参数化列表
+                    string sql = "DELETE FROM Permissions WHERE PermissionCode NOT IN (";
+                    for (int i = 0; i < currentTags.Count; i++)
+                    {
+                        sql += $"@p{i}" + (i == currentTags.Count - 1 ? "" : ",");
+                    }
+                    sql += ")";
+
+                    using (var cmd = new SqlCommand(sql, conn))
+                    {
+                        for (int i = 0; i < currentTags.Count; i++)
+                        {
+                            cmd.Parameters.AddWithValue($"@p{i}", currentTags[i]);
+                        }
+                        int rowsDeleted = cmd.ExecuteNonQuery();
+                        if (rowsDeleted > 0)
+                        {
+                            OnLog?.Invoke($"清理了 {rowsDeleted} 条不再存在的权限记录");
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                OnLog?.Invoke($"清理孤立权限失败：{ex.Message}");
             }
         }
 

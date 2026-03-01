@@ -13,7 +13,7 @@ namespace DXWinForm
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-
+            //Application.Run(new Main_Form());
             // 1. 先实例化登录窗体
             Login_Form loginForm = new Login_Form();
 
