@@ -34,6 +34,10 @@ namespace WinForm_RBAC
 
         private void barButtonItem1_ItemClick(object sender, ItemClickEventArgs e)
         {
+            if (!xtraTabControl1.TabPages.Contains(用户管理))
+            {
+                xtraTabControl1.TabPages.Add(用户管理); // 重新添加回集合
+            }
             用户管理.PageVisible = true;
             xtraTabControl1.SelectedTabPage = 用户管理;
             sqlDataSource1.Fill();
@@ -196,10 +200,10 @@ namespace WinForm_RBAC
             if (page != null)
             {
                 // 建议做法：隐藏页面（因为你之前的代码是用 PageVisible = true 打开的）
-                page.PageVisible = false;
+                //page.PageVisible = false;
 
                 // 彻底移除做法（如果不需要保留页面数据，重新打开等于刷新数据了）：
-                // xtraTabControl1.TabPages.Remove(page);
+                 xtraTabControl1.TabPages.Remove(page);
             }
         }
     }
