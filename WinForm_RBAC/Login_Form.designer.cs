@@ -1,4 +1,4 @@
-﻿namespace DXWinForm
+﻿namespace WinForm_RBAC
 {
     partial class Login_Form
     {

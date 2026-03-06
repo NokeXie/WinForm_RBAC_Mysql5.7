@@ -1,6 +1,6 @@
 ﻿using DevExpress.XtraTab;
 
-namespace DXWinForm
+namespace WinForm_RBAC
 {
     internal class HideAllPage
     {

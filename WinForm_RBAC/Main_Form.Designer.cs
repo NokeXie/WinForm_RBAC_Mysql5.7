@@ -1,5 +1,5 @@
 ﻿
-namespace DXWinForm
+namespace WinForm_RBAC
 {
     partial class Main_Form
     {
@@ -30,20 +30,20 @@ namespace DXWinForm
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            DevExpress.DataAccess.Sql.SelectQuery selectQuery3 = new DevExpress.DataAccess.Sql.SelectQuery();
-            DevExpress.DataAccess.Sql.Column column7 = new DevExpress.DataAccess.Sql.Column();
-            DevExpress.DataAccess.Sql.ColumnExpression columnExpression7 = new DevExpress.DataAccess.Sql.ColumnExpression();
-            DevExpress.DataAccess.Sql.Table table7 = new DevExpress.DataAccess.Sql.Table();
-            DevExpress.DataAccess.Sql.Column column8 = new DevExpress.DataAccess.Sql.Column();
-            DevExpress.DataAccess.Sql.ColumnExpression columnExpression8 = new DevExpress.DataAccess.Sql.ColumnExpression();
-            DevExpress.DataAccess.Sql.Table table8 = new DevExpress.DataAccess.Sql.Table();
-            DevExpress.DataAccess.Sql.Column column9 = new DevExpress.DataAccess.Sql.Column();
-            DevExpress.DataAccess.Sql.ColumnExpression columnExpression9 = new DevExpress.DataAccess.Sql.ColumnExpression();
-            DevExpress.DataAccess.Sql.Join join5 = new DevExpress.DataAccess.Sql.Join();
-            DevExpress.DataAccess.Sql.RelationColumnInfo relationColumnInfo5 = new DevExpress.DataAccess.Sql.RelationColumnInfo();
-            DevExpress.DataAccess.Sql.Table table9 = new DevExpress.DataAccess.Sql.Table();
-            DevExpress.DataAccess.Sql.Join join6 = new DevExpress.DataAccess.Sql.Join();
-            DevExpress.DataAccess.Sql.RelationColumnInfo relationColumnInfo6 = new DevExpress.DataAccess.Sql.RelationColumnInfo();
+            DevExpress.DataAccess.Sql.SelectQuery selectQuery1 = new DevExpress.DataAccess.Sql.SelectQuery();
+            DevExpress.DataAccess.Sql.Column column1 = new DevExpress.DataAccess.Sql.Column();
+            DevExpress.DataAccess.Sql.ColumnExpression columnExpression1 = new DevExpress.DataAccess.Sql.ColumnExpression();
+            DevExpress.DataAccess.Sql.Table table1 = new DevExpress.DataAccess.Sql.Table();
+            DevExpress.DataAccess.Sql.Column column2 = new DevExpress.DataAccess.Sql.Column();
+            DevExpress.DataAccess.Sql.ColumnExpression columnExpression2 = new DevExpress.DataAccess.Sql.ColumnExpression();
+            DevExpress.DataAccess.Sql.Table table2 = new DevExpress.DataAccess.Sql.Table();
+            DevExpress.DataAccess.Sql.Column column3 = new DevExpress.DataAccess.Sql.Column();
+            DevExpress.DataAccess.Sql.ColumnExpression columnExpression3 = new DevExpress.DataAccess.Sql.ColumnExpression();
+            DevExpress.DataAccess.Sql.Join join1 = new DevExpress.DataAccess.Sql.Join();
+            DevExpress.DataAccess.Sql.RelationColumnInfo relationColumnInfo1 = new DevExpress.DataAccess.Sql.RelationColumnInfo();
+            DevExpress.DataAccess.Sql.Table table3 = new DevExpress.DataAccess.Sql.Table();
+            DevExpress.DataAccess.Sql.Join join2 = new DevExpress.DataAccess.Sql.Join();
+            DevExpress.DataAccess.Sql.RelationColumnInfo relationColumnInfo2 = new DevExpress.DataAccess.Sql.RelationColumnInfo();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Main_Form));
             this.主菜单 = new DevExpress.XtraBars.BarManager(this.components);
             this.bar2 = new DevExpress.XtraBars.Bar();
@@ -77,6 +77,7 @@ namespace DXWinForm
             this.layoutControlItem5 = new DevExpress.XtraLayout.LayoutControlItem();
             this.角色管理 = new DevExpress.XtraTab.XtraTabPage();
             this.layoutControl3 = new DevExpress.XtraLayout.LayoutControl();
+            this.simpleButton2 = new DevExpress.XtraEditors.SimpleButton();
             this.simpleButton3 = new DevExpress.XtraEditors.SimpleButton();
             this.btnSavePermissions = new DevExpress.XtraEditors.SimpleButton();
             this.simpleButton1 = new DevExpress.XtraEditors.SimpleButton();
@@ -88,6 +89,7 @@ namespace DXWinForm
             this.layoutControlItem8 = new DevExpress.XtraLayout.LayoutControlItem();
             this.layoutControlItem9 = new DevExpress.XtraLayout.LayoutControlItem();
             this.layoutControlItem10 = new DevExpress.XtraLayout.LayoutControlItem();
+            this.layoutControlItem11 = new DevExpress.XtraLayout.LayoutControlItem();
             this.Root = new DevExpress.XtraLayout.LayoutControlGroup();
             this.layoutControlItem1 = new DevExpress.XtraLayout.LayoutControlItem();
             ((System.ComponentModel.ISupportInitialize)(this.主菜单)).BeginInit();
@@ -116,6 +118,7 @@ namespace DXWinForm
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem8)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem9)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem10)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem11)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.Root)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem1)).BeginInit();
             this.SuspendLayout();
@@ -137,7 +140,7 @@ namespace DXWinForm
             this.barButtonItem3,
             this.barButtonItem4});
             this.主菜单.MainMenu = this.bar2;
-            this.主菜单.MaxItemId = 9;
+            this.主菜单.MaxItemId = 10;
             this.主菜单.StatusBar = this.bar3;
             // 
             // bar2
@@ -328,45 +331,45 @@ namespace DXWinForm
             // 
             this.sqlDataSource1.ConnectionName = "DataBase_Noke_system";
             this.sqlDataSource1.Name = "sqlDataSource1";
-            column7.Alias = "用户名";
-            columnExpression7.ColumnName = "UserName";
-            table7.MetaSerializable = "<Meta X=\"30\" Y=\"30\" Width=\"125\" Height=\"143\" />";
-            table7.Name = "Users";
-            columnExpression7.Table = table7;
-            column7.Expression = columnExpression7;
-            column8.Alias = "角色名";
-            columnExpression8.ColumnName = "RoleName";
-            table8.MetaSerializable = "<Meta X=\"340\" Y=\"30\" Width=\"125\" Height=\"103\" />";
-            table8.Name = "Roles";
-            columnExpression8.Table = table8;
-            column8.Expression = columnExpression8;
-            column9.Alias = "开启状态";
-            columnExpression9.ColumnName = "Enable";
-            columnExpression9.Table = table7;
-            column9.Expression = columnExpression9;
-            selectQuery3.Columns.Add(column7);
-            selectQuery3.Columns.Add(column8);
-            selectQuery3.Columns.Add(column9);
-            selectQuery3.Name = "Users";
-            relationColumnInfo5.NestedKeyColumn = "UserID";
-            relationColumnInfo5.ParentKeyColumn = "UserID";
-            join5.KeyColumns.Add(relationColumnInfo5);
-            table9.MetaSerializable = "<Meta X=\"185\" Y=\"30\" Width=\"125\" Height=\"103\" />";
-            table9.Name = "UserRoles";
-            join5.Nested = table9;
-            join5.Parent = table7;
-            relationColumnInfo6.NestedKeyColumn = "RoleID";
-            relationColumnInfo6.ParentKeyColumn = "RoleID";
-            join6.KeyColumns.Add(relationColumnInfo6);
-            join6.Nested = table8;
-            join6.Parent = table9;
-            selectQuery3.Relations.Add(join5);
-            selectQuery3.Relations.Add(join6);
-            selectQuery3.Tables.Add(table7);
-            selectQuery3.Tables.Add(table9);
-            selectQuery3.Tables.Add(table8);
+            column1.Alias = "用户名";
+            columnExpression1.ColumnName = "UserName";
+            table1.MetaSerializable = "<Meta X=\"30\" Y=\"30\" Width=\"125\" Height=\"143\" />";
+            table1.Name = "Users";
+            columnExpression1.Table = table1;
+            column1.Expression = columnExpression1;
+            column2.Alias = "角色名";
+            columnExpression2.ColumnName = "RoleName";
+            table2.MetaSerializable = "<Meta X=\"340\" Y=\"30\" Width=\"125\" Height=\"103\" />";
+            table2.Name = "Roles";
+            columnExpression2.Table = table2;
+            column2.Expression = columnExpression2;
+            column3.Alias = "开启状态";
+            columnExpression3.ColumnName = "Enable";
+            columnExpression3.Table = table1;
+            column3.Expression = columnExpression3;
+            selectQuery1.Columns.Add(column1);
+            selectQuery1.Columns.Add(column2);
+            selectQuery1.Columns.Add(column3);
+            selectQuery1.Name = "Users";
+            relationColumnInfo1.NestedKeyColumn = "UserID";
+            relationColumnInfo1.ParentKeyColumn = "UserID";
+            join1.KeyColumns.Add(relationColumnInfo1);
+            table3.MetaSerializable = "<Meta X=\"185\" Y=\"30\" Width=\"125\" Height=\"103\" />";
+            table3.Name = "UserRoles";
+            join1.Nested = table3;
+            join1.Parent = table1;
+            relationColumnInfo2.NestedKeyColumn = "RoleID";
+            relationColumnInfo2.ParentKeyColumn = "RoleID";
+            join2.KeyColumns.Add(relationColumnInfo2);
+            join2.Nested = table2;
+            join2.Parent = table3;
+            selectQuery1.Relations.Add(join1);
+            selectQuery1.Relations.Add(join2);
+            selectQuery1.Tables.Add(table1);
+            selectQuery1.Tables.Add(table3);
+            selectQuery1.Tables.Add(table2);
             this.sqlDataSource1.Queries.AddRange(new DevExpress.DataAccess.Sql.SqlQuery[] {
-            selectQuery3});
+            selectQuery1});
             this.sqlDataSource1.ResultSchemaSerializable = resources.GetString("sqlDataSource1.ResultSchemaSerializable");
             // 
             // gridView1
@@ -457,6 +460,7 @@ namespace DXWinForm
             // 
             // layoutControl3
             // 
+            this.layoutControl3.Controls.Add(this.simpleButton2);
             this.layoutControl3.Controls.Add(this.simpleButton3);
             this.layoutControl3.Controls.Add(this.btnSavePermissions);
             this.layoutControl3.Controls.Add(this.simpleButton1);
@@ -470,20 +474,31 @@ namespace DXWinForm
             this.layoutControl3.TabIndex = 0;
             this.layoutControl3.Text = "layoutControl3";
             // 
+            // simpleButton2
+            // 
+            this.simpleButton2.Location = new System.Drawing.Point(911, 620);
+            this.simpleButton2.Name = "simpleButton2";
+            this.simpleButton2.Size = new System.Drawing.Size(296, 22);
+            this.simpleButton2.StyleController = this.layoutControl3;
+            this.simpleButton2.TabIndex = 9;
+            this.simpleButton2.Tag = "SystemManger.RoleManger.Refresh_Permission";
+            this.simpleButton2.Text = "刷新权限模块";
+            this.simpleButton2.Click += new System.EventHandler(this.simpleButton2_Click);
+            // 
             // simpleButton3
             // 
-            this.simpleButton3.Location = new System.Drawing.Point(198, 620);
+            this.simpleButton3.Location = new System.Drawing.Point(311, 620);
             this.simpleButton3.Name = "simpleButton3";
-            this.simpleButton3.Size = new System.Drawing.Size(218, 22);
+            this.simpleButton3.Size = new System.Drawing.Size(296, 22);
             this.simpleButton3.StyleController = this.layoutControl3;
             this.simpleButton3.TabIndex = 8;
             this.simpleButton3.Text = "删除角色";
             // 
             // btnSavePermissions
             // 
-            this.btnSavePermissions.Location = new System.Drawing.Point(420, 620);
+            this.btnSavePermissions.Location = new System.Drawing.Point(611, 620);
             this.btnSavePermissions.Name = "btnSavePermissions";
-            this.btnSavePermissions.Size = new System.Drawing.Size(787, 22);
+            this.btnSavePermissions.Size = new System.Drawing.Size(296, 22);
             this.btnSavePermissions.StyleController = this.layoutControl3;
             this.btnSavePermissions.TabIndex = 7;
             this.btnSavePermissions.Tag = "SystemManger.RoleManger.Save";
@@ -494,7 +509,7 @@ namespace DXWinForm
             // 
             this.simpleButton1.Location = new System.Drawing.Point(12, 620);
             this.simpleButton1.Name = "simpleButton1";
-            this.simpleButton1.Size = new System.Drawing.Size(182, 22);
+            this.simpleButton1.Size = new System.Drawing.Size(295, 22);
             this.simpleButton1.StyleController = this.layoutControl3;
             this.simpleButton1.TabIndex = 6;
             this.simpleButton1.Text = "新增角色";
@@ -503,17 +518,17 @@ namespace DXWinForm
             // 
             this.listBoxControl1.Location = new System.Drawing.Point(12, 12);
             this.listBoxControl1.Name = "listBoxControl1";
-            this.listBoxControl1.Size = new System.Drawing.Size(404, 604);
+            this.listBoxControl1.Size = new System.Drawing.Size(595, 604);
             this.listBoxControl1.StyleController = this.layoutControl3;
             this.listBoxControl1.TabIndex = 5;
             this.listBoxControl1.SelectedIndexChanged += new System.EventHandler(this.listBoxControl1_SelectedIndexChanged);
             // 
             // treeList1
             // 
-            this.treeList1.Location = new System.Drawing.Point(420, 12);
+            this.treeList1.Location = new System.Drawing.Point(611, 12);
             this.treeList1.MenuManager = this.主菜单;
             this.treeList1.Name = "treeList1";
-            this.treeList1.Size = new System.Drawing.Size(787, 604);
+            this.treeList1.Size = new System.Drawing.Size(596, 604);
             this.treeList1.TabIndex = 4;
             // 
             // layoutControlGroup2
@@ -525,7 +540,8 @@ namespace DXWinForm
             this.layoutControlItem7,
             this.layoutControlItem8,
             this.layoutControlItem9,
-            this.layoutControlItem10});
+            this.layoutControlItem10,
+            this.layoutControlItem11});
             this.layoutControlGroup2.Name = "layoutControlGroup2";
             this.layoutControlGroup2.Size = new System.Drawing.Size(1219, 654);
             this.layoutControlGroup2.TextVisible = false;
@@ -533,9 +549,9 @@ namespace DXWinForm
             // layoutControlItem6
             // 
             this.layoutControlItem6.Control = this.treeList1;
-            this.layoutControlItem6.Location = new System.Drawing.Point(408, 0);
+            this.layoutControlItem6.Location = new System.Drawing.Point(599, 0);
             this.layoutControlItem6.Name = "layoutControlItem6";
-            this.layoutControlItem6.Size = new System.Drawing.Size(791, 608);
+            this.layoutControlItem6.Size = new System.Drawing.Size(600, 608);
             this.layoutControlItem6.TextSize = new System.Drawing.Size(0, 0);
             this.layoutControlItem6.TextVisible = false;
             // 
@@ -544,7 +560,7 @@ namespace DXWinForm
             this.layoutControlItem7.Control = this.listBoxControl1;
             this.layoutControlItem7.Location = new System.Drawing.Point(0, 0);
             this.layoutControlItem7.Name = "layoutControlItem7";
-            this.layoutControlItem7.Size = new System.Drawing.Size(408, 608);
+            this.layoutControlItem7.Size = new System.Drawing.Size(599, 608);
             this.layoutControlItem7.TextSize = new System.Drawing.Size(0, 0);
             this.layoutControlItem7.TextVisible = false;
             // 
@@ -553,27 +569,36 @@ namespace DXWinForm
             this.layoutControlItem8.Control = this.simpleButton1;
             this.layoutControlItem8.Location = new System.Drawing.Point(0, 608);
             this.layoutControlItem8.Name = "layoutControlItem8";
-            this.layoutControlItem8.Size = new System.Drawing.Size(186, 26);
+            this.layoutControlItem8.Size = new System.Drawing.Size(299, 26);
             this.layoutControlItem8.TextSize = new System.Drawing.Size(0, 0);
             this.layoutControlItem8.TextVisible = false;
             // 
             // layoutControlItem9
             // 
             this.layoutControlItem9.Control = this.btnSavePermissions;
-            this.layoutControlItem9.Location = new System.Drawing.Point(408, 608);
+            this.layoutControlItem9.Location = new System.Drawing.Point(599, 608);
             this.layoutControlItem9.Name = "layoutControlItem9";
-            this.layoutControlItem9.Size = new System.Drawing.Size(791, 26);
+            this.layoutControlItem9.Size = new System.Drawing.Size(300, 26);
             this.layoutControlItem9.TextSize = new System.Drawing.Size(0, 0);
             this.layoutControlItem9.TextVisible = false;
             // 
             // layoutControlItem10
             // 
             this.layoutControlItem10.Control = this.simpleButton3;
-            this.layoutControlItem10.Location = new System.Drawing.Point(186, 608);
+            this.layoutControlItem10.Location = new System.Drawing.Point(299, 608);
             this.layoutControlItem10.Name = "layoutControlItem10";
-            this.layoutControlItem10.Size = new System.Drawing.Size(222, 26);
+            this.layoutControlItem10.Size = new System.Drawing.Size(300, 26);
             this.layoutControlItem10.TextSize = new System.Drawing.Size(0, 0);
             this.layoutControlItem10.TextVisible = false;
+            // 
+            // layoutControlItem11
+            // 
+            this.layoutControlItem11.Control = this.simpleButton2;
+            this.layoutControlItem11.Location = new System.Drawing.Point(899, 608);
+            this.layoutControlItem11.Name = "layoutControlItem11";
+            this.layoutControlItem11.Size = new System.Drawing.Size(300, 26);
+            this.layoutControlItem11.TextSize = new System.Drawing.Size(0, 0);
+            this.layoutControlItem11.TextVisible = false;
             // 
             // Root
             // 
@@ -634,6 +659,7 @@ namespace DXWinForm
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem8)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem9)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem10)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem11)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.Root)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem1)).EndInit();
             this.ResumeLayout(false);
@@ -688,5 +714,7 @@ namespace DXWinForm
         private DevExpress.XtraLayout.LayoutControlItem layoutControlItem8;
         private DevExpress.XtraLayout.LayoutControlItem layoutControlItem9;
         private DevExpress.XtraLayout.LayoutControlItem layoutControlItem10;
+        private DevExpress.XtraEditors.SimpleButton simpleButton2;
+        private DevExpress.XtraLayout.LayoutControlItem layoutControlItem11;
     }
 }

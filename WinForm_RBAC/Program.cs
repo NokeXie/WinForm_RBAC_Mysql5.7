@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Windows.Forms;
 
-namespace DXWinForm
+namespace WinForm_RBAC
 {
     static class Program
     {

@@ -1,7 +1,7 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
 
-namespace DXWinForm
+namespace WinForm_RBAC
 {
     internal class PasswordHasher
     {

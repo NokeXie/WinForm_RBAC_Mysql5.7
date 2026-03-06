@@ -7,12 +7,18 @@ using System.Linq;
 using System.Reflection;
 using System.Windows.Forms;
 
-namespace DXWinForm
+namespace WinForm_RBAC
 {
     public class PermissionManager
     {
         private readonly string _connectionString;
         private readonly Form _parentForm;
+
+        // 数据库字段常量，方便修改
+        private const string ColPermissionCode = "PermissionCode";
+        private const string ColParentCode = "ParentCode";
+        private const string ColDescription = "Description";
+        private const string TableName = "Permissions";
 
         // 可订阅日志/异常事件
         public event Action<string> OnLog;
@@ -29,19 +35,27 @@ namespace DXWinForm
         public void SyncModulesToDatabase()
         {
             var permDict = new Dictionary<string, string>();
-            foreach (var bm in GetAllBarManagers())
-                CollectBarItemTags(bm.Items, permDict);
 
+            // 收集所有 BarManager 中的权限
+            foreach (var bm in GetAllBarManagers())
+            {
+                CollectBarItemTags(bm.Items, permDict);
+            }
+
+            // 收集所有普通控件中的权限
             CollectControlTags(_parentForm.Controls, permDict);
 
-            var finalDict = new Dictionary<string, Tuple<string, string>>(); // C# 7.3 用 Tuple
+            // 推断父级编码并整理数据
+            var finalDict = new Dictionary<string, Tuple<string, string>>();
             foreach (var kv in permDict)
+            {
                 finalDict[kv.Key] = Tuple.Create(kv.Value, InferParentCode(kv.Key, permDict));
+            }
 
             // 1. 将 UI 上的 Tag 同步到数据库 (MERGE)
             SavePermissionsToDatabase(finalDict);
 
-            // 2. --- 新增：清理数据库中已不存在的 Tag ---
+            // 2. 清理数据库中已不存在的 Tag
             RemoveOrphanedPermissions(finalDict.Keys.ToList());
         }
 
@@ -51,7 +65,9 @@ namespace DXWinForm
         public void ApplyPermissions()
         {
             foreach (var bm in GetAllBarManagers())
+            {
                 ApplyBarItemPermissions(bm.Items);
+            }
 
             ApplyControlPermissions(_parentForm.Controls);
         }
@@ -64,12 +80,17 @@ namespace DXWinForm
             foreach (var item in items)
             {
                 if (item == null) continue;
+
                 string code = item.Tag?.ToString();
                 if (!string.IsNullOrWhiteSpace(code) && !permDict.ContainsKey(code))
+                {
                     permDict[code] = string.IsNullOrWhiteSpace(item.Caption) ? item.Name : item.Caption;
+                }
 
                 if (item is BarSubItem subItem)
+                {
                     CollectBarItemTags(subItem.ItemLinks.Select(l => l.Item), permDict);
+                }
             }
         }
 
@@ -79,10 +100,14 @@ namespace DXWinForm
             {
                 string code = ctrl.Tag?.ToString();
                 if (!string.IsNullOrWhiteSpace(code) && !permDict.ContainsKey(code))
+                {
                     permDict[code] = string.IsNullOrWhiteSpace(ctrl.Text) ? ctrl.Name : ctrl.Text;
+                }
 
                 if (ctrl.HasChildren)
+                {
                     CollectControlTags(ctrl.Controls, permDict);
+                }
             }
         }
 
@@ -109,13 +134,16 @@ namespace DXWinForm
             foreach (var item in items)
             {
                 if (item == null) continue;
+
                 string code = item.Tag?.ToString();
                 item.Visibility = !string.IsNullOrWhiteSpace(code) && UserSession.HasPermission(code)
                     ? BarItemVisibility.Always
                     : BarItemVisibility.Never;
 
                 if (item is BarSubItem subItem)
+                {
                     ApplyBarItemPermissions(subItem.ItemLinks.Select(l => l.Item));
+                }
             }
         }
 
@@ -146,7 +174,9 @@ namespace DXWinForm
 
                 // 递归处理子控件
                 if (ctrl.HasChildren)
+                {
                     ApplyControlPermissions(ctrl.Controls);
+                }
             }
         }
 
@@ -163,18 +193,18 @@ namespace DXWinForm
                 {
                     conn.Open();
 
+                    const string sql = @"
+                        MERGE Permissions AS target
+                        USING (VALUES (@code, @parent, @desc)) AS source(PermissionCode, ParentCode, Description)
+                        ON target.PermissionCode = source.PermissionCode
+                        WHEN MATCHED THEN
+                            UPDATE SET Description = source.Description, ParentCode = source.ParentCode
+                        WHEN NOT MATCHED THEN
+                            INSERT (PermissionCode, ParentCode, Description)
+                            VALUES (source.PermissionCode, source.ParentCode, source.Description);";
+
                     foreach (var kv in permDict)
                     {
-                        const string sql = @"
-                                            MERGE Permissions AS target
-                                            USING (VALUES (@code, @parent, @desc)) AS source(PermissionCode, ParentCode, Description)
-                                            ON target.PermissionCode = source.PermissionCode
-                                            WHEN MATCHED THEN
-                                                UPDATE SET Description = source.Description, ParentCode = source.ParentCode
-                                            WHEN NOT MATCHED THEN
-                                                INSERT (PermissionCode, ParentCode, Description)
-                                                VALUES (source.PermissionCode, source.ParentCode, source.Description);";
-
                         using (var cmd = new SqlCommand(sql, conn))
                         {
                             cmd.Parameters.AddWithValue("@code", kv.Key);
@@ -189,12 +219,13 @@ namespace DXWinForm
             }
             catch (Exception ex)
             {
-                OnLog?.Invoke($"同步数据库失败：{ex.Message}");
-                MessageBox.Show($"同步数据库失败：{ex.Message}");
+                string errMsg = $"同步数据库失败：{ex.Message}";
+                OnLog?.Invoke(errMsg);
+                MessageBox.Show(errMsg);
             }
         }
 
-        // --- 新增：清理孤立的权限记录 ---
+        // --- 清理孤立的权限记录 ---
         private void RemoveOrphanedPermissions(List<string> currentTags)
         {
             if (currentTags.Count == 0) return;
@@ -206,12 +237,8 @@ namespace DXWinForm
                     conn.Open();
 
                     // 构建一个 NOT IN 的参数化列表
-                    string sql = "DELETE FROM Permissions WHERE PermissionCode NOT IN (";
-                    for (int i = 0; i < currentTags.Count; i++)
-                    {
-                        sql += $"@p{i}" + (i == currentTags.Count - 1 ? "" : ",");
-                    }
-                    sql += ")";
+                    string paramsList = string.Join(",", currentTags.Select((tag, index) => $"@p{index}"));
+                    string sql = $"DELETE FROM {TableName} WHERE {ColPermissionCode} NOT IN ({paramsList})";
 
                     using (var cmd = new SqlCommand(sql, conn))
                     {
@@ -234,18 +261,22 @@ namespace DXWinForm
         }
 
         // =====================================================================
-        // 获取窗体中所有 BarManager
+        // 获取窗体中所有 BarManager (利用反射)
         // =====================================================================
         private IEnumerable<BarManager> GetAllBarManagers()
         {
             var result = new List<BarManager>();
-            foreach (var field in _parentForm.GetType().GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public))
+            var fields = _parentForm.GetType().GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public);
+
+            foreach (var field in fields)
             {
                 if (typeof(BarManager).IsAssignableFrom(field.FieldType))
                 {
                     var bm = field.GetValue(_parentForm) as BarManager;
                     if (bm != null)
+                    {
                         result.Add(bm);
+                    }
                 }
             }
             return result;

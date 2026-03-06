@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.35931.194
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DXWinForm", "DXWinForm\DXWinForm.csproj", "{2D7C63EA-BB66-4FFA-A64C-7DEF9BF2A426}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WinForm_RBAC", "WinForm_RBAC\WinForm_RBAC.csproj", "{2D7C63EA-BB66-4FFA-A64C-7DEF9BF2A426}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
