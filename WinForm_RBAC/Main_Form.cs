@@ -185,5 +185,22 @@ namespace WinForm_RBAC
             InitializeRoleManagement();
             XtraMessageBox.Show("权限模块刷新成功！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
+
+        private void xtraTabControl1_CloseButtonClick(object sender, EventArgs e)
+        {
+            // 1. 获取点击参数，确定是哪个 Page 触发了关闭
+            DevExpress.XtraTab.ViewInfo.ClosePageButtonEventArgs arg = e as DevExpress.XtraTab.ViewInfo.ClosePageButtonEventArgs;
+            DevExpress.XtraTab.XtraTabPage page = arg.Page as DevExpress.XtraTab.XtraTabPage;
+
+            // 2. 执行关闭逻辑
+            if (page != null)
+            {
+                // 建议做法：隐藏页面（因为你之前的代码是用 PageVisible = true 打开的）
+                page.PageVisible = false;
+
+                // 彻底移除做法（如果不需要保留页面数据，重新打开等于刷新数据了）：
+                // xtraTabControl1.TabPages.Remove(page);
+            }
+        }
     }
 }
