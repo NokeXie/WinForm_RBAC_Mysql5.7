@@ -30,20 +30,20 @@ namespace WinForm_RBAC
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            DevExpress.DataAccess.Sql.SelectQuery selectQuery5 = new DevExpress.DataAccess.Sql.SelectQuery();
-            DevExpress.DataAccess.Sql.Column column13 = new DevExpress.DataAccess.Sql.Column();
-            DevExpress.DataAccess.Sql.ColumnExpression columnExpression13 = new DevExpress.DataAccess.Sql.ColumnExpression();
-            DevExpress.DataAccess.Sql.Table table13 = new DevExpress.DataAccess.Sql.Table();
-            DevExpress.DataAccess.Sql.Column column14 = new DevExpress.DataAccess.Sql.Column();
-            DevExpress.DataAccess.Sql.ColumnExpression columnExpression14 = new DevExpress.DataAccess.Sql.ColumnExpression();
-            DevExpress.DataAccess.Sql.Table table14 = new DevExpress.DataAccess.Sql.Table();
-            DevExpress.DataAccess.Sql.Column column15 = new DevExpress.DataAccess.Sql.Column();
-            DevExpress.DataAccess.Sql.ColumnExpression columnExpression15 = new DevExpress.DataAccess.Sql.ColumnExpression();
-            DevExpress.DataAccess.Sql.Join join9 = new DevExpress.DataAccess.Sql.Join();
-            DevExpress.DataAccess.Sql.RelationColumnInfo relationColumnInfo9 = new DevExpress.DataAccess.Sql.RelationColumnInfo();
-            DevExpress.DataAccess.Sql.Table table15 = new DevExpress.DataAccess.Sql.Table();
-            DevExpress.DataAccess.Sql.Join join10 = new DevExpress.DataAccess.Sql.Join();
-            DevExpress.DataAccess.Sql.RelationColumnInfo relationColumnInfo10 = new DevExpress.DataAccess.Sql.RelationColumnInfo();
+            DevExpress.DataAccess.Sql.SelectQuery selectQuery1 = new DevExpress.DataAccess.Sql.SelectQuery();
+            DevExpress.DataAccess.Sql.Column column1 = new DevExpress.DataAccess.Sql.Column();
+            DevExpress.DataAccess.Sql.ColumnExpression columnExpression1 = new DevExpress.DataAccess.Sql.ColumnExpression();
+            DevExpress.DataAccess.Sql.Table table1 = new DevExpress.DataAccess.Sql.Table();
+            DevExpress.DataAccess.Sql.Column column2 = new DevExpress.DataAccess.Sql.Column();
+            DevExpress.DataAccess.Sql.ColumnExpression columnExpression2 = new DevExpress.DataAccess.Sql.ColumnExpression();
+            DevExpress.DataAccess.Sql.Table table2 = new DevExpress.DataAccess.Sql.Table();
+            DevExpress.DataAccess.Sql.Column column3 = new DevExpress.DataAccess.Sql.Column();
+            DevExpress.DataAccess.Sql.ColumnExpression columnExpression3 = new DevExpress.DataAccess.Sql.ColumnExpression();
+            DevExpress.DataAccess.Sql.Join join1 = new DevExpress.DataAccess.Sql.Join();
+            DevExpress.DataAccess.Sql.RelationColumnInfo relationColumnInfo1 = new DevExpress.DataAccess.Sql.RelationColumnInfo();
+            DevExpress.DataAccess.Sql.Table table3 = new DevExpress.DataAccess.Sql.Table();
+            DevExpress.DataAccess.Sql.Join join2 = new DevExpress.DataAccess.Sql.Join();
+            DevExpress.DataAccess.Sql.RelationColumnInfo relationColumnInfo2 = new DevExpress.DataAccess.Sql.RelationColumnInfo();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Main_Form));
             this.主菜单 = new DevExpress.XtraBars.BarManager(this.components);
             this.bar2 = new DevExpress.XtraBars.Bar();
@@ -333,45 +333,45 @@ namespace WinForm_RBAC
             // 
             this.sqlDataSource1.ConnectionName = "DataBase_Noke_system";
             this.sqlDataSource1.Name = "sqlDataSource1";
-            column13.Alias = "用户名";
-            columnExpression13.ColumnName = "UserName";
-            table13.MetaSerializable = "<Meta X=\"30\" Y=\"30\" Width=\"125\" Height=\"143\" />";
-            table13.Name = "Users";
-            columnExpression13.Table = table13;
-            column13.Expression = columnExpression13;
-            column14.Alias = "角色名";
-            columnExpression14.ColumnName = "RoleName";
-            table14.MetaSerializable = "<Meta X=\"340\" Y=\"30\" Width=\"125\" Height=\"103\" />";
-            table14.Name = "Roles";
-            columnExpression14.Table = table14;
-            column14.Expression = columnExpression14;
-            column15.Alias = "开启状态";
-            columnExpression15.ColumnName = "Enable";
-            columnExpression15.Table = table13;
-            column15.Expression = columnExpression15;
-            selectQuery5.Columns.Add(column13);
-            selectQuery5.Columns.Add(column14);
-            selectQuery5.Columns.Add(column15);
-            selectQuery5.Name = "Users";
-            relationColumnInfo9.NestedKeyColumn = "UserID";
-            relationColumnInfo9.ParentKeyColumn = "UserID";
-            join9.KeyColumns.Add(relationColumnInfo9);
-            table15.MetaSerializable = "<Meta X=\"185\" Y=\"30\" Width=\"125\" Height=\"103\" />";
-            table15.Name = "UserRoles";
-            join9.Nested = table15;
-            join9.Parent = table13;
-            relationColumnInfo10.NestedKeyColumn = "RoleID";
-            relationColumnInfo10.ParentKeyColumn = "RoleID";
-            join10.KeyColumns.Add(relationColumnInfo10);
-            join10.Nested = table14;
-            join10.Parent = table15;
-            selectQuery5.Relations.Add(join9);
-            selectQuery5.Relations.Add(join10);
-            selectQuery5.Tables.Add(table13);
-            selectQuery5.Tables.Add(table15);
-            selectQuery5.Tables.Add(table14);
+            column1.Alias = "用户名";
+            columnExpression1.ColumnName = "UserName";
+            table1.MetaSerializable = "<Meta X=\"30\" Y=\"30\" Width=\"125\" Height=\"143\" />";
+            table1.Name = "Users";
+            columnExpression1.Table = table1;
+            column1.Expression = columnExpression1;
+            column2.Alias = "角色名";
+            columnExpression2.ColumnName = "RoleName";
+            table2.MetaSerializable = "<Meta X=\"340\" Y=\"30\" Width=\"125\" Height=\"103\" />";
+            table2.Name = "Roles";
+            columnExpression2.Table = table2;
+            column2.Expression = columnExpression2;
+            column3.Alias = "开启状态";
+            columnExpression3.ColumnName = "Enable";
+            columnExpression3.Table = table1;
+            column3.Expression = columnExpression3;
+            selectQuery1.Columns.Add(column1);
+            selectQuery1.Columns.Add(column2);
+            selectQuery1.Columns.Add(column3);
+            selectQuery1.Name = "Users";
+            relationColumnInfo1.NestedKeyColumn = "UserID";
+            relationColumnInfo1.ParentKeyColumn = "UserID";
+            join1.KeyColumns.Add(relationColumnInfo1);
+            table3.MetaSerializable = "<Meta X=\"185\" Y=\"30\" Width=\"125\" Height=\"103\" />";
+            table3.Name = "UserRoles";
+            join1.Nested = table3;
+            join1.Parent = table1;
+            relationColumnInfo2.NestedKeyColumn = "RoleID";
+            relationColumnInfo2.ParentKeyColumn = "RoleID";
+            join2.KeyColumns.Add(relationColumnInfo2);
+            join2.Nested = table2;
+            join2.Parent = table3;
+            selectQuery1.Relations.Add(join1);
+            selectQuery1.Relations.Add(join2);
+            selectQuery1.Tables.Add(table1);
+            selectQuery1.Tables.Add(table3);
+            selectQuery1.Tables.Add(table2);
             this.sqlDataSource1.Queries.AddRange(new DevExpress.DataAccess.Sql.SqlQuery[] {
-            selectQuery5});
+            selectQuery1});
             this.sqlDataSource1.ResultSchemaSerializable = resources.GetString("sqlDataSource1.ResultSchemaSerializable");
             // 
             // gridView1
@@ -494,6 +494,7 @@ namespace WinForm_RBAC
             this.simpleButton3.Size = new System.Drawing.Size(296, 22);
             this.simpleButton3.StyleController = this.layoutControl3;
             this.simpleButton3.TabIndex = 8;
+            this.simpleButton3.Tag = "SystemManger.RoleManger.Delete";
             this.simpleButton3.Text = "删除角色";
             // 
             // btnSavePermissions
@@ -514,6 +515,7 @@ namespace WinForm_RBAC
             this.simpleButton1.Size = new System.Drawing.Size(295, 22);
             this.simpleButton1.StyleController = this.layoutControl3;
             this.simpleButton1.TabIndex = 6;
+            this.simpleButton1.Tag = "SystemManger.RoleManger.Add";
             this.simpleButton1.Text = "新增角色";
             // 
             // listBoxControl1

@@ -45,6 +45,12 @@ namespace WinForm_RBAC
 
         private void barButtonItem2_ItemClick(object sender, ItemClickEventArgs e)
         {
+            // ✅ 如果页面被移除了，先重新加回集合
+            if (!xtraTabControl1.TabPages.Contains(角色管理))
+            {
+                xtraTabControl1.TabPages.Add(角色管理);
+            }
+
             角色管理.PageVisible = true;
             xtraTabControl1.SelectedTabPage = 角色管理;
             InitializeRoleManagement();
