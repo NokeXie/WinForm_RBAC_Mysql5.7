@@ -2,7 +2,6 @@
 using DevExpress.XtraEditors;
 using DevExpress.XtraTreeList;
 using System;
-using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Windows.Forms;
@@ -25,7 +24,7 @@ namespace WinForm_RBAC
         {
             // 初始化权限管理器并同步/应用权限
             var pm = new PermissionManager(this, ConfigurationManager.ConnectionStrings["DataBase_Noke_system"].ConnectionString);
-            
+
             HideAllPage.HideAllPages(xtraTabControl1);
             pm.ApplyPermissions();
         }
@@ -209,7 +208,7 @@ namespace WinForm_RBAC
                 //page.PageVisible = false;
 
                 // 彻底移除做法（如果不需要保留页面数据，重新打开等于刷新数据了）：
-                 xtraTabControl1.TabPages.Remove(page);
+                xtraTabControl1.TabPages.Remove(page);
             }
         }
     }

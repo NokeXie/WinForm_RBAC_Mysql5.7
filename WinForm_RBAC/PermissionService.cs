@@ -1,10 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using DevExpress.XtraTreeList;
+using DevExpress.XtraTreeList.Nodes;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
-using DevExpress.XtraTreeList;
-using DevExpress.XtraTreeList.Nodes;
-using System.Windows.Forms;
 using System.Linq; // 引入 Linq 以便更简洁地操作集合
+using System.Windows.Forms;
 
 namespace WinForm_RBAC
 {
