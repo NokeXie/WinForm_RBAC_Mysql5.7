@@ -120,10 +120,4 @@
   <metadata name="主菜单.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
     <value>17, 17</value>
   </metadata>
-  <metadata name="sqlDataSource1.TrayLocation" type="System.Drawing.Point, System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
-    <value>106, 17</value>
-  </metadata>
-  <data name="sqlDataSource1.ResultSchemaSerializable" xml:space="preserve">
-    <value>PERhdGFTZXQgTmFtZT0ic3FsRGF0YVNvdXJjZTEiPjxWaWV3IE5hbWU9IlVzZXJzIj48RmllbGQgTmFtZT0i55So5oi35ZCNIiBUeXBlPSJTdHJpbmciIC8+PEZpZWxkIE5hbWU9IuinkuiJsuWQjSIgVHlwZT0iU3RyaW5nIiAvPjxGaWVsZCBOYW1lPSLlvIDlkK/nirbmgIEiIFR5cGU9IkJvb2xlYW4iIC8+PEZpZWxkIE5hbWU9IlVzZXJJRCIgVHlwZT0iSW50MzIiIC8+PEZpZWxkIE5hbWU9IlVzZXJSb2xlc19Vc2VySUQiIFR5cGU9IkludDMyIiAvPjxGaWVsZCBOYW1lPSJSb2xlSUQiIFR5cGU9IkludDMyIiAvPjxGaWVsZCBOYW1lPSJSb2xlc19Sb2xlSUQiIFR5cGU9IkludDMyIiAvPjxGaWVsZCBOYW1lPSJQYXNzd29yZEhhc2giIFR5cGU9IlN0cmluZyIgLz48RmllbGQgTmFtZT0iVXNlcnNfVXNlcklEIiBUeXBlPSJJbnQzMiIgLz48RmllbGQgTmFtZT0iVXNlck5hbWUiIFR5cGU9IlN0cmluZyIgLz48RmllbGQgTmFtZT0iVXNlcnNfUGFzc3dvcmRIYXNoIiBUeXBlPSJTdHJpbmciIC8+PEZpZWxkIE5hbWU9IkVuYWJsZSIgVHlwZT0iQm9vbGVhbiIgLz48RmllbGQgTmFtZT0iVXNlclJvbGVzX1VzZXJJRDAiIFR5cGU9IkludDMyIiAvPjxGaWVsZCBOYW1lPSJVc2VyUm9sZXNfUm9sZUlEIiBUeXBlPSJJbnQzMiIgLz48RmllbGQgTmFtZT0iUm9sZXNfUm9sZUlEMCIgVHlwZT0iSW50MzIiIC8+PEZpZWxkIE5hbWU9IlJvbGVOYW1lIiBUeXBlPSJTdHJpbmciIC8+PC9WaWV3PjwvRGF0YVNldD4=</value>
-  </data>
 </root>

@@ -14,16 +14,40 @@ namespace WinForm_RBAC
         #region --- 字段与构造函数 ---
 
         private readonly PermissionService _permissionService;
-        private readonly string _connString;
+        private readonly string _connString; // 这里的 _connString 将存储解密后的明文字符串
 
         public Main_Form()
         {
             InitializeComponent();
 
-            // 初始化连接字符串与服务层
-            _connString = ConfigurationManager.ConnectionStrings["DataBase_Noke_system"].ConnectionString;
+            // 1. 获取原始字符串
+            string rawConn = ConfigurationManager.ConnectionStrings["DataBase_Noke_system"].ConnectionString;
+
+            // 2. 统一解密获取明文连接字符串
+            _connString = GetDecryptedConnectionString(rawConn);
+
+            // 3. 使用解密后的字符串初始化服务层
             _permissionService = new PermissionService(_connString);
         }
+        private string GetDecryptedConnectionString(string connectionString)
+        {
+            try
+            {
+                var builder = new System.Data.SqlClient.SqlConnectionStringBuilder(connectionString);
+                if (!string.IsNullOrEmpty(builder.Password))
+                {
+                    // 解密密码
+                    builder.Password = AESHelper.Decrypt(builder.Password);
+                }
+                return builder.ToString();
+            }
+            catch
+            {
+                // 如果解密失败，返回原字符串（防止已经是明文的情况）
+                return connectionString;
+            }
+        }
+
 
         private void Main_Form_Load(object sender, EventArgs e)
         {
@@ -41,15 +65,32 @@ namespace WinForm_RBAC
         /// <summary>
         /// 用户管理菜单点击
         /// </summary>
+        // Main_Form.cs 内部
+
         private void barButtonItem1_ItemClick(object sender, ItemClickEventArgs e)
         {
-            if (!xtraTabControl1.TabPages.Contains(用户管理))
+            try
             {
-                xtraTabControl1.TabPages.Add(用户管理);
+                // 1. UI 逻辑：显示标签页并置顶
+                if (!xtraTabControl1.TabPages.Contains(用户管理))
+                {
+                    xtraTabControl1.TabPages.Add(用户管理);
+                }
+                用户管理.PageVisible = true;
+                xtraTabControl1.SelectedTabPage = 用户管理;
+
+                // 2. 调用 Service 层获取数据
+                // 注意：这里的 _permissionService 必须是在构造函数中使用解密后的 _connString 初始化的
+                DataTable userTable = _permissionService.GetUserDetailList();
+
+                // 3. 绑定数据到 GridControl
+                gridControl1.DataSource = userTable;
             }
-            用户管理.PageVisible = true;
-            xtraTabControl1.SelectedTabPage = 用户管理;
-            sqlDataSource1.Fill();
+            catch (Exception ex)
+            {
+                DevExpress.XtraEditors.XtraMessageBox.Show(
+                    $"加载用户权限数据失败：{ex.Message}", "系统错误");
+            }
         }
 
         /// <summary>
@@ -117,7 +158,10 @@ namespace WinForm_RBAC
                         XtraMessageBox.Show("保存成功！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                         // 4. 刷新并还原焦点
-                        sqlDataSource1.Fill();
+                        DataTable userTable = _permissionService.GetUserDetailList();
+
+                        // 3. 绑定数据到 GridControl
+                        gridControl1.DataSource = userTable;
                         gridView1.FocusedRowHandle = savedRowHandle;
                         gridView1.SelectRow(savedRowHandle);
                         gridView1.MakeRowVisible(savedRowHandle);
@@ -291,7 +335,10 @@ namespace WinForm_RBAC
                     XtraMessageBox.Show("用户已成功禁用。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                     // 5. 刷新数据并保留焦点
-                    sqlDataSource1.Fill();
+                    DataTable userTable = _permissionService.GetUserDetailList();
+
+                    // 3. 绑定数据到 GridControl
+                    gridControl1.DataSource = userTable;
                     gridView1.FocusedRowHandle = rowHandle;
                 }
                 else
@@ -326,7 +373,10 @@ namespace WinForm_RBAC
                     XtraMessageBox.Show("用户已成功启用。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                     // 5. 刷新数据并保留焦点
-                    sqlDataSource1.Fill();
+                    DataTable userTable = _permissionService.GetUserDetailList();
+
+                    // 3. 绑定数据到 GridControl
+                    gridControl1.DataSource = userTable;
                     gridView1.FocusedRowHandle = rowHandle;
                 }
                 else
@@ -358,7 +408,10 @@ namespace WinForm_RBAC
                     XtraMessageBox.Show("用户及关联数据已彻底删除。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                     // 5. 刷新数据
-                    sqlDataSource1.Fill();
+                    DataTable userTable = _permissionService.GetUserDetailList();
+
+                    // 3. 绑定数据到 GridControl
+                    gridControl1.DataSource = userTable;
 
                     // 6. 自动将焦点移到上一行（因为当前行已消失）
                     if (gridView1.RowCount > 0)
@@ -394,7 +447,10 @@ namespace WinForm_RBAC
                     if (isSuccess)
                     {
                         XtraMessageBox.Show("用户新增成功！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        sqlDataSource1.Fill();
+                        DataTable userTable = _permissionService.GetUserDetailList();
+
+                        // 3. 绑定数据到 GridControl
+                        gridControl1.DataSource = userTable;
                         gridView1.MoveLast();
                     }
                     else

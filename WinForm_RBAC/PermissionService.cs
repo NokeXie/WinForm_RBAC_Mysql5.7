@@ -605,6 +605,37 @@ namespace WinForm_RBAC
                 return false;
             }
         }
+        // PermissionService.cs 内部
+
+        /// <summary>
+        /// 获取包含角色名称的用户详细列表
+        /// </summary>
+        public DataTable GetUserDetailList()
+        {
+            var dt = new DataTable();
+            const string sql = @"
+        SELECT [Users].[UserName]       AS '用户名',
+               [Roles].[RoleName]       AS '角色名',
+               [Users].[Enable]         AS '开启状态',
+               [Users].[UserID], 
+               [UserRoles].[UserID]     AS 'UserRoles_UserID',
+               [UserRoles].[RoleID],
+               [Roles].[RoleID]         AS 'Roles_RoleID',
+               [Users].[PasswordHash]   AS '密码'
+        FROM [dbo].[Users]     AS [Users]
+        INNER JOIN [dbo].[UserRoles] AS [UserRoles] ON [UserRoles].[UserID] = [Users].[UserID]
+        INNER JOIN [dbo].[Roles]     AS [Roles]     ON [Roles].[RoleID]      = [UserRoles].[RoleID]";
+
+            using (var conn = new System.Data.SqlClient.SqlConnection(_connectionString))
+            {
+                using (var da = new System.Data.SqlClient.SqlDataAdapter(sql, conn))
+                {
+                    // 注意：这里不需要显式 Open，DataAdapter 会自动处理
+                    da.Fill(dt);
+                }
+            }
+            return dt;
+        }
     }
 
 }

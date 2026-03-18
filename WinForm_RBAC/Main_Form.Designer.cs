@@ -30,34 +30,6 @@ namespace WinForm_RBAC
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            DevExpress.DataAccess.Sql.SelectQuery selectQuery1 = new DevExpress.DataAccess.Sql.SelectQuery();
-            DevExpress.DataAccess.Sql.Column column1 = new DevExpress.DataAccess.Sql.Column();
-            DevExpress.DataAccess.Sql.ColumnExpression columnExpression1 = new DevExpress.DataAccess.Sql.ColumnExpression();
-            DevExpress.DataAccess.Sql.Table table1 = new DevExpress.DataAccess.Sql.Table();
-            DevExpress.DataAccess.Sql.Column column2 = new DevExpress.DataAccess.Sql.Column();
-            DevExpress.DataAccess.Sql.ColumnExpression columnExpression2 = new DevExpress.DataAccess.Sql.ColumnExpression();
-            DevExpress.DataAccess.Sql.Table table2 = new DevExpress.DataAccess.Sql.Table();
-            DevExpress.DataAccess.Sql.Column column3 = new DevExpress.DataAccess.Sql.Column();
-            DevExpress.DataAccess.Sql.ColumnExpression columnExpression3 = new DevExpress.DataAccess.Sql.ColumnExpression();
-            DevExpress.DataAccess.Sql.Column column4 = new DevExpress.DataAccess.Sql.Column();
-            DevExpress.DataAccess.Sql.ColumnExpression columnExpression4 = new DevExpress.DataAccess.Sql.ColumnExpression();
-            DevExpress.DataAccess.Sql.Column column5 = new DevExpress.DataAccess.Sql.Column();
-            DevExpress.DataAccess.Sql.ColumnExpression columnExpression5 = new DevExpress.DataAccess.Sql.ColumnExpression();
-            DevExpress.DataAccess.Sql.Table table3 = new DevExpress.DataAccess.Sql.Table();
-            DevExpress.DataAccess.Sql.Column column6 = new DevExpress.DataAccess.Sql.Column();
-            DevExpress.DataAccess.Sql.ColumnExpression columnExpression6 = new DevExpress.DataAccess.Sql.ColumnExpression();
-            DevExpress.DataAccess.Sql.Column column7 = new DevExpress.DataAccess.Sql.Column();
-            DevExpress.DataAccess.Sql.ColumnExpression columnExpression7 = new DevExpress.DataAccess.Sql.ColumnExpression();
-            DevExpress.DataAccess.Sql.Column column8 = new DevExpress.DataAccess.Sql.Column();
-            DevExpress.DataAccess.Sql.ColumnExpression columnExpression8 = new DevExpress.DataAccess.Sql.ColumnExpression();
-            DevExpress.DataAccess.Sql.AllColumns allColumns1 = new DevExpress.DataAccess.Sql.AllColumns();
-            DevExpress.DataAccess.Sql.AllColumns allColumns2 = new DevExpress.DataAccess.Sql.AllColumns();
-            DevExpress.DataAccess.Sql.AllColumns allColumns3 = new DevExpress.DataAccess.Sql.AllColumns();
-            DevExpress.DataAccess.Sql.Join join1 = new DevExpress.DataAccess.Sql.Join();
-            DevExpress.DataAccess.Sql.RelationColumnInfo relationColumnInfo1 = new DevExpress.DataAccess.Sql.RelationColumnInfo();
-            DevExpress.DataAccess.Sql.Join join2 = new DevExpress.DataAccess.Sql.Join();
-            DevExpress.DataAccess.Sql.RelationColumnInfo relationColumnInfo2 = new DevExpress.DataAccess.Sql.RelationColumnInfo();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Main_Form));
             this.主菜单 = new DevExpress.XtraBars.BarManager(this.components);
             this.bar2 = new DevExpress.XtraBars.Bar();
             this.系统管理 = new DevExpress.XtraBars.BarSubItem();
@@ -79,11 +51,11 @@ namespace WinForm_RBAC
             this.btnEditUser = new DevExpress.XtraEditors.SimpleButton();
             this.btnAddUser = new DevExpress.XtraEditors.SimpleButton();
             this.gridControl1 = new DevExpress.XtraGrid.GridControl();
-            this.sqlDataSource1 = new DevExpress.DataAccess.Sql.SqlDataSource(this.components);
             this.gridView1 = new DevExpress.XtraGrid.Views.Grid.GridView();
             this.col用户名 = new DevExpress.XtraGrid.Columns.GridColumn();
             this.col角色名 = new DevExpress.XtraGrid.Columns.GridColumn();
             this.col开启状态 = new DevExpress.XtraGrid.Columns.GridColumn();
+            this.col密码 = new DevExpress.XtraGrid.Columns.GridColumn();
             this.layoutControlGroup1 = new DevExpress.XtraLayout.LayoutControlGroup();
             this.layoutControlItem2 = new DevExpress.XtraLayout.LayoutControlItem();
             this.layoutControlItem3 = new DevExpress.XtraLayout.LayoutControlItem();
@@ -359,7 +331,6 @@ namespace WinForm_RBAC
             // gridControl1
             // 
             this.gridControl1.DataMember = "Users";
-            this.gridControl1.DataSource = this.sqlDataSource1;
             this.gridControl1.Location = new System.Drawing.Point(12, 12);
             this.gridControl1.MainView = this.gridView1;
             this.gridControl1.MenuManager = this.主菜单;
@@ -369,86 +340,16 @@ namespace WinForm_RBAC
             this.gridControl1.ViewCollection.AddRange(new DevExpress.XtraGrid.Views.Base.BaseView[] {
             this.gridView1});
             // 
-            // sqlDataSource1
-            // 
-            this.sqlDataSource1.ConnectionName = "DataBase_Noke_system";
-            this.sqlDataSource1.Name = "sqlDataSource1";
-            column1.Alias = "用户名";
-            columnExpression1.ColumnName = "UserName";
-            table1.MetaSerializable = "<Meta X=\"30\" Y=\"30\" Width=\"125\" Height=\"143\" />";
-            table1.Name = "Users";
-            columnExpression1.Table = table1;
-            column1.Expression = columnExpression1;
-            column2.Alias = "角色名";
-            columnExpression2.ColumnName = "RoleName";
-            table2.MetaSerializable = "<Meta X=\"340\" Y=\"30\" Width=\"125\" Height=\"103\" />";
-            table2.Name = "Roles";
-            columnExpression2.Table = table2;
-            column2.Expression = columnExpression2;
-            column3.Alias = "开启状态";
-            columnExpression3.ColumnName = "Enable";
-            columnExpression3.Table = table1;
-            column3.Expression = columnExpression3;
-            columnExpression4.ColumnName = "UserID";
-            columnExpression4.Table = table1;
-            column4.Expression = columnExpression4;
-            column5.Alias = "UserRoles_UserID";
-            columnExpression5.ColumnName = "UserID";
-            table3.MetaSerializable = "<Meta X=\"185\" Y=\"30\" Width=\"125\" Height=\"103\" />";
-            table3.Name = "UserRoles";
-            columnExpression5.Table = table3;
-            column5.Expression = columnExpression5;
-            columnExpression6.ColumnName = "RoleID";
-            columnExpression6.Table = table3;
-            column6.Expression = columnExpression6;
-            column7.Alias = "Roles_RoleID";
-            columnExpression7.ColumnName = "RoleID";
-            columnExpression7.Table = table2;
-            column7.Expression = columnExpression7;
-            columnExpression8.ColumnName = "PasswordHash";
-            columnExpression8.Table = table1;
-            column8.Expression = columnExpression8;
-            allColumns1.Table = table1;
-            allColumns2.Table = table3;
-            allColumns3.Table = table2;
-            selectQuery1.Columns.Add(column1);
-            selectQuery1.Columns.Add(column2);
-            selectQuery1.Columns.Add(column3);
-            selectQuery1.Columns.Add(column4);
-            selectQuery1.Columns.Add(column5);
-            selectQuery1.Columns.Add(column6);
-            selectQuery1.Columns.Add(column7);
-            selectQuery1.Columns.Add(column8);
-            selectQuery1.Columns.Add(allColumns1);
-            selectQuery1.Columns.Add(allColumns2);
-            selectQuery1.Columns.Add(allColumns3);
-            selectQuery1.Name = "Users";
-            relationColumnInfo1.NestedKeyColumn = "UserID";
-            relationColumnInfo1.ParentKeyColumn = "UserID";
-            join1.KeyColumns.Add(relationColumnInfo1);
-            join1.Nested = table3;
-            join1.Parent = table1;
-            relationColumnInfo2.NestedKeyColumn = "RoleID";
-            relationColumnInfo2.ParentKeyColumn = "RoleID";
-            join2.KeyColumns.Add(relationColumnInfo2);
-            join2.Nested = table2;
-            join2.Parent = table3;
-            selectQuery1.Relations.Add(join1);
-            selectQuery1.Relations.Add(join2);
-            selectQuery1.Tables.Add(table1);
-            selectQuery1.Tables.Add(table3);
-            selectQuery1.Tables.Add(table2);
-            this.sqlDataSource1.Queries.AddRange(new DevExpress.DataAccess.Sql.SqlQuery[] {
-            selectQuery1});
-            this.sqlDataSource1.ResultSchemaSerializable = resources.GetString("sqlDataSource1.ResultSchemaSerializable");
-            // 
             // gridView1
             // 
             this.gridView1.Columns.AddRange(new DevExpress.XtraGrid.Columns.GridColumn[] {
             this.col用户名,
             this.col角色名,
-            this.col开启状态});
+            this.col开启状态,
+            this.col密码});
             this.gridView1.GridControl = this.gridControl1;
+            this.gridView1.GroupSummary.AddRange(new DevExpress.XtraGrid.GridSummaryItem[] {
+            new DevExpress.XtraGrid.GridGroupSummaryItem(DevExpress.Data.SummaryItemType.Sum, "", null, "")});
             this.gridView1.Name = "gridView1";
             // 
             // col用户名
@@ -470,7 +371,14 @@ namespace WinForm_RBAC
             this.col开启状态.FieldName = "开启状态";
             this.col开启状态.Name = "col开启状态";
             this.col开启状态.Visible = true;
-            this.col开启状态.VisibleIndex = 2;
+            this.col开启状态.VisibleIndex = 3;
+            // 
+            // col密码
+            // 
+            this.col密码.FieldName = "密码";
+            this.col密码.Name = "col密码";
+            this.col密码.Visible = true;
+            this.col密码.VisibleIndex = 2;
             // 
             // layoutControlGroup1
             // 
@@ -815,7 +723,6 @@ namespace WinForm_RBAC
         private DevExpress.XtraLayout.LayoutControlGroup Root;
         private DevExpress.XtraLayout.LayoutControlItem layoutControlItem1;
         private DevExpress.XtraBars.BarButtonItem barButtonItem3;
-        private DevExpress.DataAccess.Sql.SqlDataSource sqlDataSource1;
         private DevExpress.XtraGrid.Columns.GridColumn col用户名;
         private DevExpress.XtraGrid.Columns.GridColumn col角色名;
         private DevExpress.XtraGrid.Columns.GridColumn col开启状态;
@@ -840,5 +747,6 @@ namespace WinForm_RBAC
         private DevExpress.XtraLayout.LayoutControlItem layoutControlItem13;
         private DevExpress.XtraEditors.SimpleButton simpleButton6;
         private DevExpress.XtraLayout.LayoutControlItem layoutControlItem14;
+        private DevExpress.XtraGrid.Columns.GridColumn col密码;
     }
 }

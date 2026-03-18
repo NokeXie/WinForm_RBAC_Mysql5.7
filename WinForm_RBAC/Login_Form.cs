@@ -13,7 +13,27 @@ namespace WinForm_RBAC
 
         public Login_Form()
         {
-            connectionString = ConfigurationManager.ConnectionStrings["DataBase_Noke_system"].ConnectionString;
+            // 1. 获取包含密文密码的原始连接字符串
+            string rawConn = ConfigurationManager.ConnectionStrings["DataBase_Noke_system"].ConnectionString;
+
+            // 2. 使用 SqlConnectionStringBuilder 提取并解密密码
+            try
+            {
+                var builder = new System.Data.SqlClient.SqlConnectionStringBuilder(rawConn);
+
+                // 假设 builder.Password 现在拿到的是密文
+                if (!string.IsNullOrEmpty(builder.Password))
+                {
+                    builder.Password = AESHelper.Decrypt(builder.Password);
+                }
+
+                // 3. 将还原了明文密码的字符串赋给 connectionString 供后续使用
+                this.connectionString = builder.ToString();
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("数据库配置解密失败，请检查密钥！", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
             InitializeComponent();
         }
 
