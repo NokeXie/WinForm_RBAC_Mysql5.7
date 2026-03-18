@@ -9,7 +9,7 @@ namespace WinForm_RBAC
     public partial class Login_Form : DevExpress.XtraEditors.XtraForm
     {
         /// <summary>
-        /// 直连 MySQL 的连接字符串，供全局复用。
+        /// 直连 MySQL 的连接字符串，供全局复用1。
         /// </summary>
         public readonly string ConnectionString;
 
