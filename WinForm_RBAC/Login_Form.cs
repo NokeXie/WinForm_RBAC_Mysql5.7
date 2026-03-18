@@ -21,7 +21,7 @@ namespace WinForm_RBAC
 
             try
             {
-                // 读取并构建连接字符串
+                // 读取并构建 连接字符串
                 string rawConn = ConfigurationManager.ConnectionStrings["WinForm_RBAC"]?.ConnectionString;
                 if (string.IsNullOrEmpty(rawConn))
                     throw new Exception("未在配置文件中找到名为 'WinForm_RBAC' 的连接字符串。");
