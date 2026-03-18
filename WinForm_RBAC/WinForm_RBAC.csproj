@@ -169,7 +169,6 @@
     <Compile Include="AESHelper.cs" />
     <Compile Include="GlobalInfo.cs" />
     <Compile Include="HideAllPage.cs" />
-    <Compile Include="KnockPacket.cs" />
     <Compile Include="PasswordHasher.cs" />
     <Compile Include="Login_Form.cs">
       <SubType>Form</SubType>
