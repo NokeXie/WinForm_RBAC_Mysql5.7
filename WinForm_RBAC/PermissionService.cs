@@ -543,5 +543,38 @@ namespace WinForm_RBAC
                 return false;
             }
         }
+        /// <summary>
+        /// 获取属于指定角色的所有用户名
+        /// </summary>
+        public List<string> GetUserNamesByRole(int roleId)
+        {
+            var userNames = new List<string>();
+            const string sql = @"
+        SELECT u.UserName 
+        FROM Users u
+        JOIN UserRoles ur ON u.UserID = ur.UserID
+        WHERE ur.RoleID = @RID";
+
+            try
+            {
+                using (var conn = new SqlConnection(_connectionString))
+                {
+                    conn.Open();
+                    using (var cmd = new SqlCommand(sql, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@RID", roleId);
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                userNames.Add(reader["UserName"].ToString());
+                            }
+                        }
+                    }
+                }
+            }
+            catch { /* 记录日志 */ }
+            return userNames;
+        }
     }
 }

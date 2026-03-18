@@ -2,8 +2,10 @@
 using DevExpress.XtraEditors;
 using DevExpress.XtraTreeList;
 using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace WinForm_RBAC
@@ -436,7 +438,7 @@ namespace WinForm_RBAC
 
         private void simpleButton3_Click(object sender, EventArgs e)
         {
-            // 1. 获取选中的角色项
+            // 1. 获取选中的角色
             if (!(listBoxControl1.SelectedItem is DevExpress.XtraEditors.Controls.ImageListBoxItem selectedItem))
             {
                 XtraMessageBox.Show("请先选择要删除的角色！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -446,29 +448,36 @@ namespace WinForm_RBAC
             int roleId = Convert.ToInt32(selectedItem.Tag);
             string roleName = selectedItem.Value.ToString();
 
-            // 2. 弹出二次确认框
-            string msg = $"确定要永久删除角色「{roleName}」吗？\n此操作将同时清除该角色的所有权限配置。";
-            if (XtraMessageBox.Show(msg, "删除确认", MessageBoxButtons.YesNo, MessageBoxIcon.Stop) == DialogResult.Yes)
+            // 2. 核心校验：获取正在使用该角色的用户名单
+            List<string> activeUsers = _permissionService.GetUserNamesByRole(roleId);
+
+            if (activeUsers.Count > 0)
             {
-                // 3. 调用服务层执行删除
-                // 返回 0: 成功, 1: 有用户关联, -1: 数据库错误
+                // 拼接前 5 个用户名，防止名单过长导致弹窗撑爆屏幕
+                string userListStr = string.Join("、", activeUsers.Take(5));
+                if (activeUsers.Count > 5) userListStr += $" 等共 {activeUsers.Count} 人";
+
+                string warningMsg = $"无法删除角色「{roleName}」！\n\n当前以下用户正在使用该角色：\n【{userListStr}】\n\n请先在“用户管理”中更改这些用户的角色后再试。";
+
+                XtraMessageBox.Show(warningMsg, "删除受阻", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return; // 直接拦截，不进入删除确认
+            }
+
+            // 3. 只有无用户关联时，才弹出删除确认
+            string confirmMsg = $"确定要永久删除角色「{roleName}」吗？\n此操作将同时清除该角色的所有权限配置。";
+            if (XtraMessageBox.Show(confirmMsg, "最终确认", MessageBoxButtons.YesNo, MessageBoxIcon.Stop) == DialogResult.Yes)
+            {
                 int result = _permissionService.DeleteRole(roleId);
 
                 if (result == 0)
                 {
                     XtraMessageBox.Show("角色已成功删除。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                    // 4. 刷新角色列表并清空权限树勾选
                     LoadRolesToListBox();
                     treeList1.UncheckAll();
                 }
-                else if (result == 1)
-                {
-                    XtraMessageBox.Show($"无法删除：该角色下仍有活跃用户，请先更改相关用户的角色。", "警告", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                }
                 else
                 {
-                    XtraMessageBox.Show("删除失败，请联系管理员或检查日志。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    XtraMessageBox.Show("删除失败，请检查数据库连接或权限设置。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }
