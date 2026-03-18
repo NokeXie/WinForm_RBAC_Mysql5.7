@@ -1,12 +1,11 @@
 ﻿using DevExpress.XtraTreeList;
 using DevExpress.XtraTreeList.Nodes;
+using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
 using System.Linq; // 引入 Linq 以便更简洁地操作集合
 using System.Windows.Forms;
-using MySql.Data.MySqlClient;
 
 namespace WinForm_RBAC
 {
@@ -129,7 +128,7 @@ namespace WinForm_RBAC
         INNER JOIN Roles     ON Roles.RoleID     = UserRoles.RoleID";
 
             using (var conn = new MySqlConnection(_connectionString))
-            
+
             using (var da = new MySqlDataAdapter(sql, conn))
             {
                 da.Fill(dt);
@@ -336,7 +335,7 @@ namespace WinForm_RBAC
                     }
                 }
             }
-            catch 
+            catch
             {
                 // 实际开发中建议在此处记录日志
                 return false;

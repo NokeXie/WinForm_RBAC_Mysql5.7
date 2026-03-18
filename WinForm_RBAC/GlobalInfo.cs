@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace WinForm_RBAC
+﻿namespace WinForm_RBAC
 {
     /// <summary>
     /// 全局静态类，用于跨窗体访问当前登录用户信息

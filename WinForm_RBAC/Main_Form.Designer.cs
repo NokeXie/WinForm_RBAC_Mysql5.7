@@ -55,6 +55,7 @@ namespace WinForm_RBAC
             this.col用户名 = new DevExpress.XtraGrid.Columns.GridColumn();
             this.col角色名 = new DevExpress.XtraGrid.Columns.GridColumn();
             this.col开启状态 = new DevExpress.XtraGrid.Columns.GridColumn();
+            this.repositoryItemCheckEdit1 = new DevExpress.XtraEditors.Repository.RepositoryItemCheckEdit();
             this.layoutControlGroup1 = new DevExpress.XtraLayout.LayoutControlGroup();
             this.layoutControlItem2 = new DevExpress.XtraLayout.LayoutControlItem();
             this.layoutControlItem3 = new DevExpress.XtraLayout.LayoutControlItem();
@@ -81,7 +82,6 @@ namespace WinForm_RBAC
             this.layoutControlItem14 = new DevExpress.XtraLayout.LayoutControlItem();
             this.Root = new DevExpress.XtraLayout.LayoutControlGroup();
             this.layoutControlItem1 = new DevExpress.XtraLayout.LayoutControlItem();
-            this.repositoryItemCheckEdit1 = new DevExpress.XtraEditors.Repository.RepositoryItemCheckEdit();
             ((System.ComponentModel.ISupportInitialize)(this.主菜单)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControl1)).BeginInit();
             this.layoutControl1.SuspendLayout();
@@ -92,6 +92,7 @@ namespace WinForm_RBAC
             this.layoutControl2.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.gridControl1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridView1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.repositoryItemCheckEdit1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlGroup1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem2)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem3)).BeginInit();
@@ -114,7 +115,6 @@ namespace WinForm_RBAC
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem14)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.Root)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem1)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.repositoryItemCheckEdit1)).BeginInit();
             this.SuspendLayout();
             // 
             // 主菜单
@@ -376,6 +376,11 @@ namespace WinForm_RBAC
             this.col开启状态.Visible = true;
             this.col开启状态.VisibleIndex = 2;
             // 
+            // repositoryItemCheckEdit1
+            // 
+            this.repositoryItemCheckEdit1.AutoHeight = false;
+            this.repositoryItemCheckEdit1.Name = "repositoryItemCheckEdit1";
+            // 
             // layoutControlGroup1
             // 
             this.layoutControlGroup1.EnableIndentsWithoutBorders = DevExpress.Utils.DefaultBoolean.True;
@@ -471,9 +476,9 @@ namespace WinForm_RBAC
             // 
             // simpleButton6
             // 
-            this.simpleButton6.Location = new System.Drawing.Point(491, 620);
+            this.simpleButton6.Location = new System.Drawing.Point(489, 620);
             this.simpleButton6.Name = "simpleButton6";
-            this.simpleButton6.Size = new System.Drawing.Size(236, 22);
+            this.simpleButton6.Size = new System.Drawing.Size(238, 22);
             this.simpleButton6.StyleController = this.layoutControl3;
             this.simpleButton6.TabIndex = 10;
             this.simpleButton6.Tag = "SystemManger.RoleManger.NameEdit";
@@ -495,7 +500,7 @@ namespace WinForm_RBAC
             // 
             this.simpleButton3.Location = new System.Drawing.Point(252, 620);
             this.simpleButton3.Name = "simpleButton3";
-            this.simpleButton3.Size = new System.Drawing.Size(235, 22);
+            this.simpleButton3.Size = new System.Drawing.Size(233, 22);
             this.simpleButton3.StyleController = this.layoutControl3;
             this.simpleButton3.TabIndex = 8;
             this.simpleButton3.Tag = "SystemManger.RoleManger.Delete";
@@ -598,7 +603,7 @@ namespace WinForm_RBAC
             this.layoutControlItem10.Control = this.simpleButton3;
             this.layoutControlItem10.Location = new System.Drawing.Point(240, 608);
             this.layoutControlItem10.Name = "layoutControlItem10";
-            this.layoutControlItem10.Size = new System.Drawing.Size(239, 26);
+            this.layoutControlItem10.Size = new System.Drawing.Size(237, 26);
             this.layoutControlItem10.TextSize = new System.Drawing.Size(0, 0);
             this.layoutControlItem10.TextVisible = false;
             // 
@@ -614,9 +619,9 @@ namespace WinForm_RBAC
             // layoutControlItem14
             // 
             this.layoutControlItem14.Control = this.simpleButton6;
-            this.layoutControlItem14.Location = new System.Drawing.Point(479, 608);
+            this.layoutControlItem14.Location = new System.Drawing.Point(477, 608);
             this.layoutControlItem14.Name = "layoutControlItem14";
-            this.layoutControlItem14.Size = new System.Drawing.Size(240, 26);
+            this.layoutControlItem14.Size = new System.Drawing.Size(242, 26);
             this.layoutControlItem14.TextSize = new System.Drawing.Size(0, 0);
             this.layoutControlItem14.TextVisible = false;
             // 
@@ -638,11 +643,6 @@ namespace WinForm_RBAC
             this.layoutControlItem1.Size = new System.Drawing.Size(1227, 684);
             this.layoutControlItem1.TextSize = new System.Drawing.Size(0, 0);
             this.layoutControlItem1.TextVisible = false;
-            // 
-            // repositoryItemCheckEdit1
-            // 
-            this.repositoryItemCheckEdit1.AutoHeight = false;
-            this.repositoryItemCheckEdit1.Name = "repositoryItemCheckEdit1";
             // 
             // Main_Form
             // 
@@ -668,6 +668,7 @@ namespace WinForm_RBAC
             this.layoutControl2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.gridControl1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.gridView1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.repositoryItemCheckEdit1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlGroup1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem2)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem3)).EndInit();
@@ -690,7 +691,6 @@ namespace WinForm_RBAC
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem14)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.Root)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem1)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.repositoryItemCheckEdit1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 

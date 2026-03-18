@@ -1,4 +1,5 @@
 ﻿using DevExpress.XtraBars;
+using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -189,23 +190,21 @@ namespace WinForm_RBAC
 
             try
             {
-                using (var conn = new SqlConnection(_connectionString))
+                using (var conn = new MySqlConnection(_connectionString))
                 {
                     conn.Open();
 
                     const string sql = @"
-                        MERGE Permissions AS target
-                        USING (VALUES (@code, @parent, @desc)) AS source(PermissionCode, ParentCode, Description)
-                        ON target.PermissionCode = source.PermissionCode
-                        WHEN MATCHED THEN
-                            UPDATE SET Description = source.Description, ParentCode = source.ParentCode
-                        WHEN NOT MATCHED THEN
-                            INSERT (PermissionCode, ParentCode, Description)
-                            VALUES (source.PermissionCode, source.ParentCode, source.Description);";
+                        
+                        INSERT INTO Permissions (PermissionCode, Description, ParentCode)
+                        VALUES (@Code, @Desc, @Parent)
+                        ON DUPLICATE KEY UPDATE 
+                            Description = VALUES(Description),
+                            ParentCode = VALUES(ParentCode);";
 
                     foreach (var kv in permDict)
                     {
-                        using (var cmd = new SqlCommand(sql, conn))
+                        using (var cmd = new MySqlCommand(sql, conn))
                         {
                             cmd.Parameters.AddWithValue("@code", kv.Key);
                             cmd.Parameters.AddWithValue("@parent", (object)kv.Value.Item2 ?? DBNull.Value);
@@ -232,7 +231,7 @@ namespace WinForm_RBAC
 
             try
             {
-                using (var conn = new SqlConnection(_connectionString))
+                using (var conn = new MySqlConnection(_connectionString))
                 {
                     conn.Open();
 
@@ -240,7 +239,7 @@ namespace WinForm_RBAC
                     string paramsList = string.Join(",", currentTags.Select((tag, index) => $"@p{index}"));
                     string sql = $"DELETE FROM {TableName} WHERE {ColPermissionCode} NOT IN ({paramsList})";
 
-                    using (var cmd = new SqlCommand(sql, conn))
+                    using (var cmd = new MySqlCommand(sql, conn))
                     {
                         for (int i = 0; i < currentTags.Count; i++)
                         {

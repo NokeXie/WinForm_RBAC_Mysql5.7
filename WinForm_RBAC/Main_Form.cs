@@ -84,7 +84,7 @@ namespace WinForm_RBAC
                 DataTable userTable = _permissionService.GetUserDetailList();
                 gridControl1.DataSource = userTable;
 
-    
+
             }
             catch (Exception ex)
             {

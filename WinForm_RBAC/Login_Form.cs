@@ -1,174 +1,122 @@
 ﻿using MySql.Data.MySqlClient;
+using MySqlProxyClient; // 需包含 KnockPacket
 using System;
 using System.Configuration;
 using System.Net.Sockets;
-using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
-using MySqlProxyClient; // KnockPacket
 
 namespace WinForm_RBAC
 {
     public partial class Login_Form : DevExpress.XtraEditors.XtraForm
     {
         // ═══════════════════════════════════════════════════════════
-        //  代理 / 敲门配置（与 Program.cs 保持一致）
+        //  代理 / 敲门配置（优先从 App.config 读取）
         // ═══════════════════════════════════════════════════════════
-        private const string ProxyHost = "218.3.35.97";
-        private const int KnockPort = 9876;
-        private const int ProxyPort = 20523;
-        private const string KnockKeyHex = "03B821EB8CCDE09A67F1CC3F93B4C908D32BC685B8C8CEB7A42B4F6260F12245";
+        private readonly string _proxyHost;
+        private readonly int _knockPort;
+        private readonly int _proxyPort;
+        private readonly string _knockKeyHex;
+
         private const int MaxRetries = 5;
-        private const int BaseDelayMs = 150;
-        // ═══════════════════════════════════════════════════════════
+        private const int BaseDelayMs = 200;
 
         /// <summary>
-        /// 已解密、已指向代理端口的 MySQL 连接字符串。
-        /// 供 Main_Form / PermissionService 复用同一条连接字符串。
+        /// 已解密且指向代理端口的连接字符串，供全局复用。
         /// </summary>
-        public readonly string connectionString;
+        public readonly string ConnectionString;
 
         public static string LogonUser { get; private set; }
 
         public Login_Form()
         {
-            // App.config 中只需存放 Database / Uid / Pwd（密文）即可，
-            // Server / Port 在运行时强制覆盖为代理地址。
-            // 示例连接字符串：
-            //   <add name="DataBase_Noke_system"
-            //        connectionString="Server=placeholder;Port=0;Database=WinForm_RBAC;Uid=root;Pwd=<密文>" />
-            string rawConn = ConfigurationManager
-                .ConnectionStrings["WinForm_RBAC"].ConnectionString;
+            InitializeComponent();
 
             try
             {
+                // 1. 初始化配置参数
+                _proxyHost = ConfigurationManager.AppSettings["ProxyHost"] ?? "218.3.35.97";
+                _knockPort = int.TryParse(ConfigurationManager.AppSettings["KnockPort"], out int kp) ? kp : 9876;
+                _proxyPort = int.TryParse(ConfigurationManager.AppSettings["ProxyPort"], out int pp) ? pp : 20523;
+                _knockKeyHex = ConfigurationManager.AppSettings["KnockKeyHex"] ?? "03B821EB8CCDE09A67F1CC3F93B4C908D32BC685B8C8CEB7A42B4F6260F12245";
+
+                // 2. 构建连接字符串
+                string rawConn = ConfigurationManager.ConnectionStrings["WinForm_RBAC"]?.ConnectionString;
+                if (string.IsNullOrEmpty(rawConn))
+                    throw new Exception("未在配置文件中找到名为 'WinForm_RBAC' 的连接字符串。");
+
                 var builder = new MySqlConnectionStringBuilder(rawConn);
 
                 // 解密密码
                 if (!string.IsNullOrEmpty(builder.Password))
                     builder.Password = AESHelper.Decrypt(builder.Password);
 
-                // 强制覆盖为代理地址 + 代理端口
-                builder.Server = ProxyHost;
-                builder.Port = (uint)ProxyPort;
-                builder.ConnectionTimeout = 3; // 配合重试，单次超时短一点
+                // 强制修正为代理网关地址
+                builder.Server = _proxyHost;
+                builder.Port = (uint)_proxyPort;
+                builder.ConnectionTimeout = 5; // 单次连接超时设定
 
-                connectionString = builder.ToString();
+                ConnectionString = builder.ToString();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"数据库配置解密失败：{ex.Message}\n请检查密钥！",
-                    "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"数据库配置加载失败：{ex.Message}", "初始化错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                // 如果配置失败，禁用登录按钮防止误操作
+                if (Login_simpleButton != null) Login_simpleButton.Enabled = false;
             }
-
-            InitializeComponent();
         }
 
-        // ──────────────────────────────────────────────────────────
-        //  登录按钮
-        // ──────────────────────────────────────────────────────────
-        private void Login_simpleButton_Click(object sender, EventArgs e)
+        // ═══════════════════════════════════════════════════════════
+        //  交互逻辑 (Async 异步处理)
+        // ═══════════════════════════════════════════════════════════
+
+        private async void Login_simpleButton_Click(object sender, EventArgs e)
         {
             string user = Input_User.Text.Trim();
             string password = Input_password.Text.Trim();
 
             if (string.IsNullOrEmpty(user) || string.IsNullOrEmpty(password))
             {
-                MessageBox.Show("请输入用户名和密码！", "提示",
-                    MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("请输入用户名和密码！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            // 禁用按钮，防止重复点击
-            Login_simpleButton.Enabled = false;
-            Login_simpleButton.Text = "连接中...";
+            // 切换 UI 状态
+            ToggleUIState(true);
 
             try
             {
-                // ── 第一步：发送 UDP 敲门包 ──────────────────────
-                SendKnock();
+                // 第一步：异步发送敲门包 (Fire and forget 模式)
+                await Task.Run(() => SendKnock());
 
-                // ── 第二步：带退避重试连接代理 ───────────────────
-                MySqlConnection conn = ConnectWithRetry();
-                if (conn == null)
+                // 第二步：带退避策略的异步连接重试
+                using (MySqlConnection conn = await ConnectWithRetryAsync())
                 {
-                    MessageBox.Show(
-                        $"已重试 {MaxRetries} 次，仍无法连接到数据库服务。\n请稍后重试或联系管理员。",
-                        "连接失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    return;
-                }
-
-                // ── 第三步：验证身份 + 加载权限 ──────────────────
-                using (conn)
-                {
-                    string passwordHash = PasswordHasher.HashPassword(password);
-
-                    // 验证用户身份
-                    const string authSql = @"
-                        SELECT UserID FROM Users
-                        WHERE UserName     = @user
-                          AND PasswordHash = @passwordHash
-                          AND Enable       = 1";
-
-                    int userId;
-                    using (var authCmd = new MySqlCommand(authSql, conn))
+                    if (conn == null)
                     {
-                        authCmd.Parameters.AddWithValue("@user", user);
-                        authCmd.Parameters.AddWithValue("@passwordHash", passwordHash);
-
-                        var result = authCmd.ExecuteScalar();
-                        if (result == null)
-                        {
-                            MessageBox.Show("用户名或密码错误，或账号已被禁用！",
-                                "登录失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                            return;
-                        }
-                        userId = Convert.ToInt32(result);
+                        MessageBox.Show($"重试 {MaxRetries} 次后仍无法连接到安全网关，请检查网络。",
+                            "连接失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return;
                     }
 
-                    // 加载该用户的所有权限
-                    const string permSql = @"
-                        SELECT p.PermissionCode
-                        FROM UserRoles ur
-                        INNER JOIN RolePermissions rp ON ur.RoleID         = rp.RoleID
-                        INNER JOIN Permissions p      ON rp.PermissionCode = p.PermissionCode
-                        WHERE ur.UserID = @userId";
+                    // 第三步：身份验证与权限加载
+                    bool isAuthSuccess = await AuthenticateAndLoadPermissionsAsync(conn, user, password);
 
-                    UserSession.Permissions.Clear();
-                    using (var permCmd = new MySqlCommand(permSql, conn))
+                    if (isAuthSuccess)
                     {
-                        permCmd.Parameters.AddWithValue("@userId", userId);
-                        using (var reader = permCmd.ExecuteReader())
-                            while (reader.Read())
-                                UserSession.Permissions.Add(reader["PermissionCode"].ToString());
+                        LogonUser = user;
+                        this.DialogResult = DialogResult.OK;
+                        this.Close();
                     }
-
-                    if (UserSession.Permissions.Count == 0)
-                        MessageBox.Show("您尚未被分配任何权限，请联系管理员。",
-                            "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-
-                    // 保存全局信息
-                    GlobalInfo.CurrentUserId = userId;
-                    GlobalInfo.CurrentUserName = user;
-                    LogonUser = user;
-
-                    this.DialogResult = DialogResult.OK;
-                    this.Close();
                 }
-            }
-            catch (MySqlException ex)
-            {
-                MessageBox.Show($"数据库错误 [{ex.Number}]：{ex.Message}",
-                    "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"发生未知错误：{ex.Message}",
-                    "异常", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show($"登录过程中发生异常：{ex.Message}", "系统错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             finally
             {
-                Login_simpleButton.Enabled = true;
-                Login_simpleButton.Text = "登录";
+                ToggleUIState(false);
             }
         }
 
@@ -177,61 +125,122 @@ namespace WinForm_RBAC
             Application.Exit();
         }
 
-        // ──────────────────────────────────────────────────────────
-        //  代理辅助方法（逻辑源自 Program.cs）
-        // ──────────────────────────────────────────────────────────
+        // ═══════════════════════════════════════════════════════════
+        //  内部逻辑方法
+        // ═══════════════════════════════════════════════════════════
 
-        /// <summary>
-        /// 发送 UDP 敲门包，触发服务端把本机 IP 写入白名单。
-        /// </summary>
-        private static void SendKnock()
+        private void ToggleUIState(bool isLoggingIn)
         {
-            byte[] key = HexToBytes(KnockKeyHex);
-            byte[] packet = KnockPacket.Build(key);
-            using (var udp = new UdpClient())
-                udp.Send(packet, packet.Length, ProxyHost, KnockPort);
+            Login_simpleButton.Enabled = !isLoggingIn;
+            Login_simpleButton.Text = isLoggingIn ? "正在安全连接..." : "登录";
+            this.Cursor = isLoggingIn ? Cursors.WaitCursor : Cursors.Default;
         }
 
         /// <summary>
-        /// 发完敲门包后带退避重试连接数据库。
-        ///
-        /// 为什么需要重试：UDP 无确认，服务端把 IP 写入白名单有时延，
-        /// 固定 Sleep 在网络抖动时易失败。重试让连接时机自适应。
-        ///
-        /// 退避策略：第 i 次失败后等 BaseDelayMs * i 毫秒再重试。
+        /// 异步连接重试逻辑（指数退避）
         /// </summary>
-        private MySqlConnection ConnectWithRetry()
+        private async Task<MySqlConnection> ConnectWithRetryAsync()
         {
             for (int attempt = 1; attempt <= MaxRetries; attempt++)
             {
-                Thread.Sleep(BaseDelayMs * attempt);
+                // 等待时间随重试次数增加：200ms, 400ms, 600ms...
+                await Task.Delay(BaseDelayMs * attempt);
+
+                var conn = new MySqlConnection(ConnectionString);
                 try
                 {
-                    var conn = new MySqlConnection(connectionString);
-                    conn.Open();
-                    return conn; // 成功，由调用方 Dispose
+                    await conn.OpenAsync();
+                    return conn; // 成功连接，返回给调用方处理
                 }
                 catch (MySqlException ex)
                 {
-                    // 1130 = Host not allowed（白名单未生效）
-                    // 0    = 无法连接到代理
-                    bool canRetry = (ex.Number == 1130 || ex.Number == 0)
-                                    && attempt < MaxRetries;
+                    conn.Dispose();
+                    // 1130 = Host not allowed（白名单未生效）, 0 = 无法连接
+                    bool canRetry = (ex.Number == 1130 || ex.Number == 0) && attempt < MaxRetries;
                     if (!canRetry) break;
                 }
                 catch
                 {
-                    break; // 配置/网络类异常，不值得重试
+                    conn.Dispose();
+                    break;
                 }
             }
             return null;
         }
 
+        /// <summary>
+        /// 验证身份并加载权限
+        /// </summary>
+        private async Task<bool> AuthenticateAndLoadPermissionsAsync(MySqlConnection conn, string user, string password)
+        {
+            string passwordHash = PasswordHasher.HashPassword(password);
+
+            // 1. 验证用户
+            const string authSql = "SELECT UserID FROM Users WHERE UserName = @user AND PasswordHash = @hash AND Enable = 1";
+            object result;
+            using (var cmd = new MySqlCommand(authSql, conn))
+            {
+                cmd.Parameters.AddWithValue("@user", user);
+                cmd.Parameters.AddWithValue("@hash", passwordHash);
+                result = await cmd.ExecuteScalarAsync();
+            }
+
+            if (result == null)
+            {
+                MessageBox.Show("用户名或密码错误，或账号已被禁用！", "登录失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+
+            int userId = Convert.ToInt32(result);
+
+            // 2. 加载权限
+            const string permSql = @"
+                SELECT DISTINCT p.PermissionCode
+                FROM UserRoles ur
+                INNER JOIN RolePermissions rp ON ur.RoleID = rp.RoleID
+                INNER JOIN Permissions p ON rp.PermissionCode = p.PermissionCode
+                WHERE ur.UserID = @userId";
+
+            UserSession.Permissions.Clear();
+            using (var permCmd = new MySqlCommand(permSql, conn))
+            {
+                permCmd.Parameters.AddWithValue("@userId", userId);
+                using (var reader = await permCmd.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
+                    {
+                        UserSession.Permissions.Add(reader["PermissionCode"].ToString());
+                    }
+                }
+            }
+
+            if (UserSession.Permissions.Count == 0)
+            {
+                MessageBox.Show("您尚未被分配任何权限，请联系管理员。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+
+            // 保存全局状态
+            GlobalInfo.CurrentUserId = userId;
+            GlobalInfo.CurrentUserName = user;
+            return true;
+        }
+
+        private void SendKnock()
+        {
+            try
+            {
+                byte[] key = HexToBytes(_knockKeyHex);
+                byte[] packet = KnockPacket.Build(key);
+                using (var udp = new UdpClient())
+                    udp.Send(packet, packet.Length, _proxyHost, _knockPort);
+            }
+            catch { /* 敲门静默失败，由连接重试逻辑处理结果 */ }
+        }
+
         private static byte[] HexToBytes(string hex)
         {
             hex = hex.Replace(" ", "").Replace("-", "");
-            if (hex.Length % 2 != 0)
-                throw new FormatException("KnockKeyHex 长度必须为偶数");
+            if (hex.Length % 2 != 0) throw new FormatException("十六进制密钥长度非法");
             var result = new byte[hex.Length / 2];
             for (int i = 0; i < result.Length; i++)
                 result[i] = Convert.ToByte(hex.Substring(i * 2, 2), 16);
