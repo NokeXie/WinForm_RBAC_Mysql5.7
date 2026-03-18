@@ -55,7 +55,6 @@ namespace WinForm_RBAC
             this.col用户名 = new DevExpress.XtraGrid.Columns.GridColumn();
             this.col角色名 = new DevExpress.XtraGrid.Columns.GridColumn();
             this.col开启状态 = new DevExpress.XtraGrid.Columns.GridColumn();
-            this.col密码 = new DevExpress.XtraGrid.Columns.GridColumn();
             this.layoutControlGroup1 = new DevExpress.XtraLayout.LayoutControlGroup();
             this.layoutControlItem2 = new DevExpress.XtraLayout.LayoutControlItem();
             this.layoutControlItem3 = new DevExpress.XtraLayout.LayoutControlItem();
@@ -82,6 +81,7 @@ namespace WinForm_RBAC
             this.layoutControlItem14 = new DevExpress.XtraLayout.LayoutControlItem();
             this.Root = new DevExpress.XtraLayout.LayoutControlGroup();
             this.layoutControlItem1 = new DevExpress.XtraLayout.LayoutControlItem();
+            this.repositoryItemCheckEdit1 = new DevExpress.XtraEditors.Repository.RepositoryItemCheckEdit();
             ((System.ComponentModel.ISupportInitialize)(this.主菜单)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControl1)).BeginInit();
             this.layoutControl1.SuspendLayout();
@@ -114,6 +114,7 @@ namespace WinForm_RBAC
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem14)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.Root)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem1)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.repositoryItemCheckEdit1)).BeginInit();
             this.SuspendLayout();
             // 
             // 主菜单
@@ -335,6 +336,8 @@ namespace WinForm_RBAC
             this.gridControl1.MainView = this.gridView1;
             this.gridControl1.MenuManager = this.主菜单;
             this.gridControl1.Name = "gridControl1";
+            this.gridControl1.RepositoryItems.AddRange(new DevExpress.XtraEditors.Repository.RepositoryItem[] {
+            this.repositoryItemCheckEdit1});
             this.gridControl1.Size = new System.Drawing.Size(1195, 604);
             this.gridControl1.TabIndex = 4;
             this.gridControl1.ViewCollection.AddRange(new DevExpress.XtraGrid.Views.Base.BaseView[] {
@@ -345,8 +348,7 @@ namespace WinForm_RBAC
             this.gridView1.Columns.AddRange(new DevExpress.XtraGrid.Columns.GridColumn[] {
             this.col用户名,
             this.col角色名,
-            this.col开启状态,
-            this.col密码});
+            this.col开启状态});
             this.gridView1.GridControl = this.gridControl1;
             this.gridView1.GroupSummary.AddRange(new DevExpress.XtraGrid.GridSummaryItem[] {
             new DevExpress.XtraGrid.GridGroupSummaryItem(DevExpress.Data.SummaryItemType.Sum, "", null, "")});
@@ -368,17 +370,11 @@ namespace WinForm_RBAC
             // 
             // col开启状态
             // 
+            this.col开启状态.ColumnEdit = this.repositoryItemCheckEdit1;
             this.col开启状态.FieldName = "开启状态";
             this.col开启状态.Name = "col开启状态";
             this.col开启状态.Visible = true;
-            this.col开启状态.VisibleIndex = 3;
-            // 
-            // col密码
-            // 
-            this.col密码.FieldName = "密码";
-            this.col密码.Name = "col密码";
-            this.col密码.Visible = true;
-            this.col密码.VisibleIndex = 2;
+            this.col开启状态.VisibleIndex = 2;
             // 
             // layoutControlGroup1
             // 
@@ -643,6 +639,11 @@ namespace WinForm_RBAC
             this.layoutControlItem1.TextSize = new System.Drawing.Size(0, 0);
             this.layoutControlItem1.TextVisible = false;
             // 
+            // repositoryItemCheckEdit1
+            // 
+            this.repositoryItemCheckEdit1.AutoHeight = false;
+            this.repositoryItemCheckEdit1.Name = "repositoryItemCheckEdit1";
+            // 
             // Main_Form
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -689,6 +690,7 @@ namespace WinForm_RBAC
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem14)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.Root)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem1)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.repositoryItemCheckEdit1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -747,6 +749,6 @@ namespace WinForm_RBAC
         private DevExpress.XtraLayout.LayoutControlItem layoutControlItem13;
         private DevExpress.XtraEditors.SimpleButton simpleButton6;
         private DevExpress.XtraLayout.LayoutControlItem layoutControlItem14;
-        private DevExpress.XtraGrid.Columns.GridColumn col密码;
+        private DevExpress.XtraEditors.Repository.RepositoryItemCheckEdit repositoryItemCheckEdit1;
     }
 }

@@ -7,6 +7,7 @@ using System.Configuration;
 using System.Data;
 using System.Linq;
 using System.Windows.Forms;
+
 namespace WinForm_RBAC
 {
     public partial class Main_Form : XtraForm
@@ -20,6 +21,10 @@ namespace WinForm_RBAC
         {
             InitializeComponent();
 
+            // 手动绑定事件（如果设计器里没绑定的话）
+            this.gridView1.CellValueChanged += gridView1_CellValueChanged;
+            this.repositoryItemCheckEdit1.EditValueChanged += repositoryItemCheckEdit1_EditValueChanged;
+
             // 1. 获取原始字符串
             string rawConn = ConfigurationManager.ConnectionStrings["DataBase_Noke_system"].ConnectionString;
 
@@ -29,6 +34,7 @@ namespace WinForm_RBAC
             // 3. 使用解密后的字符串初始化服务层
             _permissionService = new PermissionService(_connString);
         }
+
         private string GetDecryptedConnectionString(string connectionString)
         {
             try
@@ -48,7 +54,6 @@ namespace WinForm_RBAC
             }
         }
 
-
         private void Main_Form_Load(object sender, EventArgs e)
         {
             // 初始化权限管理器并同步/应用权限
@@ -65,8 +70,6 @@ namespace WinForm_RBAC
         /// <summary>
         /// 用户管理菜单点击
         /// </summary>
-        // Main_Form.cs 内部
-
         private void barButtonItem1_ItemClick(object sender, ItemClickEventArgs e)
         {
             try
@@ -126,6 +129,45 @@ namespace WinForm_RBAC
         #region --- 用户管理逻辑 ---
 
         /// <summary>
+        /// 新增用户
+        /// </summary>
+        private void btnAddUser_Click(object sender, EventArgs e)
+        {
+            DataTable dtRoles = _permissionService.GetAllRoles();
+
+            // 传入 -1 代表新增模式
+            using (var addForm = new UserEditForm(dtRoles, -1, "", -1))
+            {
+                // 设置窗口标题为"新增用户"
+                addForm.Text = "新增用户";
+                if (addForm.ShowDialog() == DialogResult.OK)
+                {
+                    // 此时能进到这里，说明 NewUserName 和 NewPassword 已经过窗体内部校验
+                    bool isSuccess = _permissionService.AddUser(
+                        addForm.NewUserName,
+                        addForm.NewPassword,
+                        addForm.NewRoleId
+                    );
+
+                    if (isSuccess)
+                    {
+                        XtraMessageBox.Show("用户新增成功！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                        DataTable userTable = _permissionService.GetUserDetailList();
+
+                        // 绑定数据到 GridControl
+                        gridControl1.DataSource = userTable;
+                        gridView1.MoveLast();
+                    }
+                    else
+                    {
+                        XtraMessageBox.Show("新增失败，用户名可能已存在。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
         /// 编辑用户信息
         /// </summary>
         private void btnEditUser_Click(object sender, EventArgs e)
@@ -160,7 +202,7 @@ namespace WinForm_RBAC
                         // 4. 刷新并还原焦点
                         DataTable userTable = _permissionService.GetUserDetailList();
 
-                        // 3. 绑定数据到 GridControl
+                        // 绑定数据到 GridControl
                         gridControl1.DataSource = userTable;
                         gridView1.FocusedRowHandle = savedRowHandle;
                         gridView1.SelectRow(savedRowHandle);
@@ -168,6 +210,239 @@ namespace WinForm_RBAC
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// 禁用用户
+        /// </summary>
+        private void simpleButton4_Click(object sender, EventArgs e)
+        {
+            // 1. 获取当前选中的行
+            int rowHandle = gridView1.FocusedRowHandle;
+            if (rowHandle < 0) return;
+
+            // 2. 获取用户信息
+            int userId = Convert.ToInt32(gridView1.GetRowCellValue(rowHandle, "UserID"));
+            string userName = gridView1.GetRowCellValue(rowHandle, "用户名")?.ToString();
+
+            // 3. 弹出二次确认框，防止误操作
+            string message = $"确定要禁用用户「{userName}」吗？\n禁用后该用户将无法登录系统。";
+            if (XtraMessageBox.Show(message, "操作确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            {
+                // 4. 调用服务层执行禁用
+                bool isSuccess = _permissionService.DisableUser(userId);
+
+                if (isSuccess)
+                {
+                    XtraMessageBox.Show("用户已成功禁用。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                    // 5. 刷新数据并保留焦点
+                    DataTable userTable = _permissionService.GetUserDetailList();
+
+                    // 绑定数据到 GridControl
+                    gridControl1.DataSource = userTable;
+                    gridView1.FocusedRowHandle = rowHandle;
+                }
+                else
+                {
+                    XtraMessageBox.Show("禁用失败，请检查数据库连接。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 启用用户
+        /// </summary>
+        private void simpleButton5_Click(object sender, EventArgs e)
+        {
+            // 1. 获取当前选中的行
+            int rowHandle = gridView1.FocusedRowHandle;
+            if (rowHandle < 0) return;
+
+            // 2. 获取用户信息
+            int userId = Convert.ToInt32(gridView1.GetRowCellValue(rowHandle, "UserID"));
+            string userName = gridView1.GetRowCellValue(rowHandle, "用户名")?.ToString();
+
+            // 选做：获取当前状态，避免重复启用 (假设 Grid 中有状态列)
+            // object status = gridView1.GetRowCellValue(rowHandle, "状态");
+
+            // 3. 执行启用逻辑
+            if (XtraMessageBox.Show($"确定要恢复用户「{userName}」的登录权限吗？", "操作确认",
+                MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
+            {
+                // 4. 调用服务层
+                bool isSuccess = _permissionService.EnableUser(userId);
+
+                if (isSuccess)
+                {
+                    XtraMessageBox.Show("用户已成功启用。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                    // 5. 刷新数据并保留焦点
+                    DataTable userTable = _permissionService.GetUserDetailList();
+
+                    // 绑定数据到 GridControl
+                    gridControl1.DataSource = userTable;
+                    gridView1.FocusedRowHandle = rowHandle;
+                }
+                else
+                {
+                    XtraMessageBox.Show("启用失败，请检查数据库连接。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 删除用户
+        /// </summary>
+        private void btnDeleteUser_Click(object sender, EventArgs e)
+        {
+            // 1. 获取当前选中的行句柄
+            int rowHandle = gridView1.FocusedRowHandle;
+            if (rowHandle < 0) return;
+
+            // 2. 获取用户信息用于提示
+            int userId = Convert.ToInt32(gridView1.GetRowCellValue(rowHandle, "UserID"));
+            string userName = gridView1.GetRowCellValue(rowHandle, "用户名")?.ToString();
+
+            // 3. 弹出严厉的确认框
+            string confirmMsg = $"危险操作！\n确定要彻底删除用户「{userName}」及其所有权限关联吗？\n删除后数据将无法恢复。";
+            if (XtraMessageBox.Show(confirmMsg, "永久删除确认", MessageBoxButtons.YesNo, MessageBoxIcon.Stop) == DialogResult.Yes)
+            {
+                // 4. 调用服务层执行物理删除
+                bool isSuccess = _permissionService.DeleteUser(userId);
+
+                if (isSuccess)
+                {
+                    XtraMessageBox.Show("用户及关联数据已彻底删除。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                    // 5. 刷新数据
+                    DataTable userTable = _permissionService.GetUserDetailList();
+
+                    // 绑定数据到 GridControl
+                    gridControl1.DataSource = userTable;
+
+                    // 6. 自动将焦点移到上一行（因为当前行已消失）
+                    if (gridView1.RowCount > 0)
+                    {
+                        gridView1.FocusedRowHandle = Math.Max(0, rowHandle - 1);
+                    }
+                }
+                else
+                {
+                    XtraMessageBox.Show("删除失败，该用户可能正在被系统引用或数据库连接异常。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 修改当前登录用户密码
+        /// </summary>
+        private void barButtonItem3_ItemClick(object sender, ItemClickEventArgs e)
+        {
+            // 1. 获取当前登录用户的 ID 和名称
+            int currentUserId = GlobalInfo.CurrentUserId;
+            string currentUserName = GlobalInfo.CurrentUserName;
+
+            // 2. 直接调用 XtraInputBox.Show 的重载方法
+            // 参数说明：提示文字, 标题, 默认值
+            string prompt = $"请输入用户「{currentUserName}」的新密码：";
+            string caption = "安全设置";
+
+            // 注意：老版本的 XtraInputBox.Show 不支持直接在这里设置 PasswordChar
+            // 我们先获取输入结果
+            object result = DevExpress.XtraEditors.XtraInputBox.Show(prompt, caption, "");
+
+            // 3. 处理结果
+            if (result != null)
+            {
+                string newPwd = result.ToString().Trim();
+
+                if (string.IsNullOrWhiteSpace(newPwd))
+                {
+                    DevExpress.XtraEditors.XtraMessageBox.Show("密码不能为空！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // 4. 调用 Service 层执行更新（内部处理哈希加密）
+                bool isSuccess = _permissionService.UpdateUserPasswordDirectly(currentUserId, newPwd);
+
+                if (isSuccess)
+                {
+                    DevExpress.XtraEditors.XtraMessageBox.Show("密码修改成功！下次登录请使用新密码。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    DevExpress.XtraEditors.XtraMessageBox.Show("修改失败，请检查数据库连接。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Grid 单元格值改变事件（处理"开启状态"列）
+        /// </summary>
+        private void gridView1_CellValueChanged(object sender, DevExpress.XtraGrid.Views.Base.CellValueChangedEventArgs e)
+        {
+            // 只处理"开启状态"这一列
+            if (e.Column.FieldName == "开启状态")
+            {
+                var view = sender as DevExpress.XtraGrid.Views.Grid.GridView;
+                if (view == null) return;
+
+                // 1. 获取当前行信息
+                object userIdObj = view.GetRowCellValue(e.RowHandle, "UserID");
+                object userNameObj = view.GetRowCellValue(e.RowHandle, "用户名");
+                if (userIdObj == null) return;
+
+                int userId = Convert.ToInt32(userIdObj);
+                string userName = userNameObj?.ToString() ?? "未知用户";
+                bool newStatus = Convert.ToBoolean(e.Value);
+                string statusText = newStatus ? "启用" : "禁用";
+
+                // 2. 调用 Service 更新数据库
+                try
+                {
+                    bool success = _permissionService.UpdateUserEnableStatus(userId, newStatus);
+
+                    if (success)
+                    {
+                        // 成功提示：可以使用简单的弹出框，或者只在界面左下角状态栏提示
+                        DevExpress.XtraEditors.XtraMessageBox.Show(
+                            $"用户 [{userName}] 已成功{statusText}！",
+                            "操作成功",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Information);
+                    }
+                    else
+                    {
+                        throw new Exception("数据库未受影响");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 失败提示
+                    DevExpress.XtraEditors.XtraMessageBox.Show(
+                        $"更新失败：{ex.Message}",
+                        "系统错误",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+
+                    // 3. 回滚界面显示：如果数据库更新失败，把界面的勾选状态改回去
+                    // 暂时关闭事件响应防止死循环
+                    view.CellValueChanged -= gridView1_CellValueChanged;
+                    view.SetRowCellValue(e.RowHandle, "开启状态", !newStatus);
+                    view.CellValueChanged += gridView1_CellValueChanged;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 当复选框状态改变时立即触发
+        /// </summary>
+        private void repositoryItemCheckEdit1_EditValueChanged(object sender, EventArgs e)
+        {
+            // 强制 GridView 立即保存当前单元格的编辑并提交到 DataSource
+            // 这会直接触发 gridView1_CellValueChanged 事件
+            gridView1.PostEditor();
         }
 
         #endregion
@@ -210,6 +485,9 @@ namespace WinForm_RBAC
             }
         }
 
+        /// <summary>
+        /// 加载权限树
+        /// </summary>
         public void LoadPermissionsTree(TreeList treeList)
         {
             treeList.BeginUpdate();
@@ -233,6 +511,9 @@ namespace WinForm_RBAC
             }
         }
 
+        /// <summary>
+        /// 加载角色列表到 ListBox
+        /// </summary>
         private void LoadRolesToListBox()
         {
             listBoxControl1.Items.Clear();
@@ -247,6 +528,9 @@ namespace WinForm_RBAC
             }
         }
 
+        /// <summary>
+        /// 权限树节点勾选事件
+        /// </summary>
         private void treeList1_AfterCheckNode(object sender, NodeEventArgs e)
         {
             if (sender is TreeList tree && e.Node != null)
@@ -263,6 +547,9 @@ namespace WinForm_RBAC
             }
         }
 
+        /// <summary>
+        /// 角色列表选中项改变事件
+        /// </summary>
         private void listBoxControl1_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (listBoxControl1.SelectedItem is DevExpress.XtraEditors.Controls.ImageListBoxItem item)
@@ -285,182 +572,8 @@ namespace WinForm_RBAC
         }
 
         /// <summary>
-        /// 保存当前角色的权限配置
+        /// 新增角色
         /// </summary>
-        private void btnSavePermissions_Click(object sender, EventArgs e)
-        {
-            if (listBoxControl1.SelectedItem is DevExpress.XtraEditors.Controls.ImageListBoxItem item)
-            {
-                int roleId = Convert.ToInt32(item.Tag);
-                var selectedCodes = _permissionService.CollectAllCheckedPermissionCodes(treeList1);
-                _permissionService.SaveRolePermissions(roleId, selectedCodes);
-
-                XtraMessageBox.Show("权限保存成功！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            }
-        }
-
-        /// <summary>
-        /// 刷新权限模块定义
-        /// </summary>
-        private void simpleButton2_Click(object sender, EventArgs e)
-        {
-            var pm = new PermissionManager(this, _connString);
-            pm.SyncModulesToDatabase();
-            InitializeRoleManagement();
-
-            XtraMessageBox.Show("权限模块刷新成功！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-        }
-
-        #endregion
-
-        private void simpleButton4_Click(object sender, EventArgs e)
-        {
-            // 1. 获取当前选中的行
-            int rowHandle = gridView1.FocusedRowHandle;
-            if (rowHandle < 0) return;
-
-            // 2. 获取用户信息
-            int userId = Convert.ToInt32(gridView1.GetRowCellValue(rowHandle, "UserID"));
-            string userName = gridView1.GetRowCellValue(rowHandle, "用户名")?.ToString();
-
-            // 3. 弹出二次确认框，防止误操作
-            string message = $"确定要禁用用户「{userName}」吗？\n禁用后该用户将无法登录系统。";
-            if (XtraMessageBox.Show(message, "操作确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-            {
-                // 4. 调用服务层执行禁用
-                bool isSuccess = _permissionService.DisableUser(userId);
-
-                if (isSuccess)
-                {
-                    XtraMessageBox.Show("用户已成功禁用。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                    // 5. 刷新数据并保留焦点
-                    DataTable userTable = _permissionService.GetUserDetailList();
-
-                    // 3. 绑定数据到 GridControl
-                    gridControl1.DataSource = userTable;
-                    gridView1.FocusedRowHandle = rowHandle;
-                }
-                else
-                {
-                    XtraMessageBox.Show("禁用失败，请检查数据库连接。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            }
-        }
-
-        private void simpleButton5_Click(object sender, EventArgs e)
-        {
-            // 1. 获取当前选中的行
-            int rowHandle = gridView1.FocusedRowHandle;
-            if (rowHandle < 0) return;
-
-            // 2. 获取用户信息
-            int userId = Convert.ToInt32(gridView1.GetRowCellValue(rowHandle, "UserID"));
-            string userName = gridView1.GetRowCellValue(rowHandle, "用户名")?.ToString();
-
-            // 选做：获取当前状态，避免重复启用 (假设 Grid 中有状态列)
-            // object status = gridView1.GetRowCellValue(rowHandle, "状态");
-
-            // 3. 执行启用逻辑
-            if (XtraMessageBox.Show($"确定要恢复用户「{userName}」的登录权限吗？", "操作确认",
-                MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
-            {
-                // 4. 调用服务层
-                bool isSuccess = _permissionService.EnableUser(userId);
-
-                if (isSuccess)
-                {
-                    XtraMessageBox.Show("用户已成功启用。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                    // 5. 刷新数据并保留焦点
-                    DataTable userTable = _permissionService.GetUserDetailList();
-
-                    // 3. 绑定数据到 GridControl
-                    gridControl1.DataSource = userTable;
-                    gridView1.FocusedRowHandle = rowHandle;
-                }
-                else
-                {
-                    XtraMessageBox.Show("启用失败，请检查数据库连接。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            }
-        }
-
-        private void btnDeleteUser_Click(object sender, EventArgs e)
-        {
-            // 1. 获取当前选中的行句柄
-            int rowHandle = gridView1.FocusedRowHandle;
-            if (rowHandle < 0) return;
-
-            // 2. 获取用户信息用于提示
-            int userId = Convert.ToInt32(gridView1.GetRowCellValue(rowHandle, "UserID"));
-            string userName = gridView1.GetRowCellValue(rowHandle, "用户名")?.ToString();
-
-            // 3. 弹出严厉的确认框
-            string confirmMsg = $"危险操作！\n确定要彻底删除用户「{userName}」及其所有权限关联吗？\n删除后数据将无法恢复。";
-            if (XtraMessageBox.Show(confirmMsg, "永久删除确认", MessageBoxButtons.YesNo, MessageBoxIcon.Stop) == DialogResult.Yes)
-            {
-                // 4. 调用服务层执行物理删除
-                bool isSuccess = _permissionService.DeleteUser(userId);
-
-                if (isSuccess)
-                {
-                    XtraMessageBox.Show("用户及关联数据已彻底删除。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                    // 5. 刷新数据
-                    DataTable userTable = _permissionService.GetUserDetailList();
-
-                    // 3. 绑定数据到 GridControl
-                    gridControl1.DataSource = userTable;
-
-                    // 6. 自动将焦点移到上一行（因为当前行已消失）
-                    if (gridView1.RowCount > 0)
-                    {
-                        gridView1.FocusedRowHandle = Math.Max(0, rowHandle - 1);
-                    }
-                }
-                else
-                {
-                    XtraMessageBox.Show("删除失败，该用户可能正在被系统引用或数据库连接异常。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            }
-        }
-
-        private void btnAddUser_Click(object sender, EventArgs e)
-        {
-            DataTable dtRoles = _permissionService.GetAllRoles();
-
-            // 传入 -1 代表新增模式
-            using (var addForm = new UserEditForm(dtRoles, -1, "", -1))
-            {
-                // 设置窗口标题为“新增用户”
-                addForm.Text = "新增用户";
-                if (addForm.ShowDialog() == DialogResult.OK)
-                {
-                    // 此时能进到这里，说明 NewUserName 和 NewPassword 已经过窗体内部校验
-                    bool isSuccess = _permissionService.AddUser(
-                        addForm.NewUserName,
-                        addForm.NewPassword,
-                        addForm.NewRoleId
-                    );
-
-                    if (isSuccess)
-                    {
-                        XtraMessageBox.Show("用户新增成功！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                        DataTable userTable = _permissionService.GetUserDetailList();
-
-                        // 3. 绑定数据到 GridControl
-                        gridControl1.DataSource = userTable;
-                        gridView1.MoveLast();
-                    }
-                    else
-                    {
-                        XtraMessageBox.Show("新增失败，用户名可能已存在。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    }
-                }
-            }
-        }
-
         private void simpleButton1_Click(object sender, EventArgs e)
         {
             // 1. 弹出输入对话框获取新角色名称
@@ -491,6 +604,46 @@ namespace WinForm_RBAC
             }
         }
 
+        /// <summary>
+        /// 修改角色名称
+        /// </summary>
+        private void simpleButton6_Click(object sender, EventArgs e)
+        {
+            // 1. 验证是否选中了角色
+            if (!(listBoxControl1.SelectedItem is DevExpress.XtraEditors.Controls.ImageListBoxItem selectedItem))
+            {
+                XtraMessageBox.Show("请先选择要修改的角色！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            int roleId = Convert.ToInt32(selectedItem.Tag);
+            string oldRoleName = selectedItem.Value.ToString();
+
+            // 2. 弹出输入对话框，并赋初始值为旧名称
+            string newRoleName = XtraInputBox.Show("请输入新的角色名称：", "修改角色名称", oldRoleName);
+
+            // 3. 只有当名称发生变化且不为空时才执行更新
+            if (!string.IsNullOrWhiteSpace(newRoleName) && newRoleName != oldRoleName)
+            {
+                bool isSuccess = _permissionService.UpdateRoleName(roleId, newRoleName.Trim());
+
+                if (isSuccess)
+                {
+                    XtraMessageBox.Show("角色名称修改成功！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                    // 4. 刷新角色列表并保持焦点
+                    InitializeRoleManagement();
+                }
+                else
+                {
+                    XtraMessageBox.Show("修改失败：名称可能已存在或数据库连接异常。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        /// <summary>
+        /// 删除角色
+        /// </summary>
         private void simpleButton3_Click(object sender, EventArgs e)
         {
             // 1. 获取选中的角色
@@ -537,78 +690,33 @@ namespace WinForm_RBAC
             }
         }
 
-        private void simpleButton6_Click(object sender, EventArgs e)
+        /// <summary>
+        /// 保存当前角色的权限配置
+        /// </summary>
+        private void btnSavePermissions_Click(object sender, EventArgs e)
         {
-            // 1. 验证是否选中了角色
-            if (!(listBoxControl1.SelectedItem is DevExpress.XtraEditors.Controls.ImageListBoxItem selectedItem))
+            if (listBoxControl1.SelectedItem is DevExpress.XtraEditors.Controls.ImageListBoxItem item)
             {
-                XtraMessageBox.Show("请先选择要修改的角色！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
+                int roleId = Convert.ToInt32(item.Tag);
+                var selectedCodes = _permissionService.CollectAllCheckedPermissionCodes(treeList1);
+                _permissionService.SaveRolePermissions(roleId, selectedCodes);
 
-            int roleId = Convert.ToInt32(selectedItem.Tag);
-            string oldRoleName = selectedItem.Value.ToString();
-
-            // 2. 弹出输入对话框，并赋初始值为旧名称
-            string newRoleName = XtraInputBox.Show("请输入新的角色名称：", "修改角色名称", oldRoleName);
-
-            // 3. 只有当名称发生变化且不为空时才执行更新
-            if (!string.IsNullOrWhiteSpace(newRoleName) && newRoleName != oldRoleName)
-            {
-                bool isSuccess = _permissionService.UpdateRoleName(roleId, newRoleName.Trim());
-
-                if (isSuccess)
-                {
-                    XtraMessageBox.Show("角色名称修改成功！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
-                    // 4. 刷新角色列表并保持焦点
-                    InitializeRoleManagement();
-                }
-                else
-                {
-                    XtraMessageBox.Show("修改失败：名称可能已存在或数据库连接异常。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
+                XtraMessageBox.Show("权限保存成功！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 
-        private void barButtonItem3_ItemClick(object sender, ItemClickEventArgs e)
+        /// <summary>
+        /// 刷新权限模块定义
+        /// </summary>
+        private void simpleButton2_Click(object sender, EventArgs e)
         {
-            // 1. 获取当前登录用户的 ID 和名称
-            int currentUserId = GlobalInfo.CurrentUserId;
-            string currentUserName = GlobalInfo.CurrentUserName;
+            var pm = new PermissionManager(this, _connString);
+            pm.SyncModulesToDatabase();
+            InitializeRoleManagement();
 
-            // 2. 直接调用 XtraInputBox.Show 的重载方法
-            // 参数说明：提示文字, 标题, 默认值
-            string prompt = $"请输入用户「{currentUserName}」的新密码：";
-            string caption = "安全设置";
-
-            // 注意：老版本的 XtraInputBox.Show 不支持直接在这里设置 PasswordChar
-            // 我们先获取输入结果
-            object result = DevExpress.XtraEditors.XtraInputBox.Show(prompt, caption, "");
-
-            // 3. 处理结果
-            if (result != null)
-            {
-                string newPwd = result.ToString().Trim();
-
-                if (string.IsNullOrWhiteSpace(newPwd))
-                {
-                    DevExpress.XtraEditors.XtraMessageBox.Show("密码不能为空！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    return;
-                }
-
-                // 4. 调用 Service 层执行更新（内部处理哈希加密）
-                bool isSuccess = _permissionService.UpdateUserPasswordDirectly(currentUserId, newPwd);
-
-                if (isSuccess)
-                {
-                    DevExpress.XtraEditors.XtraMessageBox.Show("密码修改成功！下次登录请使用新密码。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                }
-                else
-                {
-                    DevExpress.XtraEditors.XtraMessageBox.Show("修改失败，请检查数据库连接。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                }
-            }
+            XtraMessageBox.Show("权限模块刷新成功！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
+
+        #endregion
     }
 }

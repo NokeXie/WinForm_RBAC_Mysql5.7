@@ -636,6 +636,19 @@ namespace WinForm_RBAC
             }
             return dt;
         }
+        public bool UpdateUserEnableStatus(int userId, bool isEnabled)
+        {
+            const string sql = "UPDATE [dbo].[Users] SET [Enable] = @enable WHERE [UserID] = @id";
+            using (var conn = new System.Data.SqlClient.SqlConnection(_connectionString))
+            {
+                using (var cmd = new System.Data.SqlClient.SqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@enable", isEnabled);
+                    cmd.Parameters.AddWithValue("@id", userId);
+                    conn.Open();
+                    return cmd.ExecuteNonQuery() > 0;
+                }
+            }
+        }
     }
-
 }
