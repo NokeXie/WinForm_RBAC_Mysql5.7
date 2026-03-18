@@ -1,8 +1,6 @@
 ﻿using MySql.Data.MySqlClient;
-using MySqlProxyClient; // 需包含 KnockPacket
 using System;
 using System.Configuration;
-using System.Net.Sockets;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -10,19 +8,8 @@ namespace WinForm_RBAC
 {
     public partial class Login_Form : DevExpress.XtraEditors.XtraForm
     {
-        // ═══════════════════════════════════════════════════════════
-        //  代理 / 敲门配置（优先从 App.config 读取）
-        // ═══════════════════════════════════════════════════════════
-        private readonly string _proxyHost;
-        private readonly int _knockPort;
-        private readonly int _proxyPort;
-        private readonly string _knockKeyHex;
-
-        private const int MaxRetries = 5;
-        private const int BaseDelayMs = 200;
-
         /// <summary>
-        /// 已解密且指向代理端口的连接字符串，供全局复用。
+        /// 直连 MySQL 的连接字符串，供全局复用。
         /// </summary>
         public readonly string ConnectionString;
 
@@ -34,13 +21,7 @@ namespace WinForm_RBAC
 
             try
             {
-                // 1. 初始化配置参数
-                _proxyHost = ConfigurationManager.AppSettings["ProxyHost"] ?? "218.3.35.97";
-                _knockPort = int.TryParse(ConfigurationManager.AppSettings["KnockPort"], out int kp) ? kp : 9876;
-                _proxyPort = int.TryParse(ConfigurationManager.AppSettings["ProxyPort"], out int pp) ? pp : 20523;
-                _knockKeyHex = ConfigurationManager.AppSettings["KnockKeyHex"] ?? "03B821EB8CCDE09A67F1CC3F93B4C908D32BC685B8C8CEB7A42B4F6260F12245";
-
-                // 2. 构建连接字符串
+                // 读取并构建连接字符串
                 string rawConn = ConfigurationManager.ConnectionStrings["WinForm_RBAC"]?.ConnectionString;
                 if (string.IsNullOrEmpty(rawConn))
                     throw new Exception("未在配置文件中找到名为 'WinForm_RBAC' 的连接字符串。");
@@ -51,23 +32,19 @@ namespace WinForm_RBAC
                 if (!string.IsNullOrEmpty(builder.Password))
                     builder.Password = AESHelper.Decrypt(builder.Password);
 
-                // 强制修正为代理网关地址
-                builder.Server = _proxyHost;
-                builder.Port = (uint)_proxyPort;
-                builder.ConnectionTimeout = 5; // 单次连接超时设定
+                builder.ConnectionTimeout = 5;
 
                 ConnectionString = builder.ToString();
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"数据库配置加载失败：{ex.Message}", "初始化错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                // 如果配置失败，禁用登录按钮防止误操作
                 if (Login_simpleButton != null) Login_simpleButton.Enabled = false;
             }
         }
 
         // ═══════════════════════════════════════════════════════════
-        //  交互逻辑 (Async 异步处理)
+        //  交互逻辑
         // ═══════════════════════════════════════════════════════════
 
         private async void Login_simpleButton_Click(object sender, EventArgs e)
@@ -81,25 +58,14 @@ namespace WinForm_RBAC
                 return;
             }
 
-            // 切换 UI 状态
             ToggleUIState(true);
 
             try
             {
-                // 第一步：异步发送敲门包 (Fire and forget 模式)
-                await Task.Run(() => SendKnock());
-
-                // 第二步：带退避策略的异步连接重试
-                using (MySqlConnection conn = await ConnectWithRetryAsync())
+                using (var conn = new MySqlConnection(ConnectionString))
                 {
-                    if (conn == null)
-                    {
-                        MessageBox.Show($"重试 {MaxRetries} 次后仍无法连接到安全网关，请检查网络。",
-                            "连接失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        return;
-                    }
+                    await conn.OpenAsync();
 
-                    // 第三步：身份验证与权限加载
                     bool isAuthSuccess = await AuthenticateAndLoadPermissionsAsync(conn, user, password);
 
                     if (isAuthSuccess)
@@ -109,6 +75,10 @@ namespace WinForm_RBAC
                         this.Close();
                     }
                 }
+            }
+            catch (MySqlException ex)
+            {
+                MessageBox.Show($"无法连接到数据库：{ex.Message}", "连接失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
             catch (Exception ex)
             {
@@ -132,40 +102,8 @@ namespace WinForm_RBAC
         private void ToggleUIState(bool isLoggingIn)
         {
             Login_simpleButton.Enabled = !isLoggingIn;
-            Login_simpleButton.Text = isLoggingIn ? "正在安全连接..." : "登录";
+            Login_simpleButton.Text = isLoggingIn ? "正在连接..." : "登录";
             this.Cursor = isLoggingIn ? Cursors.WaitCursor : Cursors.Default;
-        }
-
-        /// <summary>
-        /// 异步连接重试逻辑（指数退避）
-        /// </summary>
-        private async Task<MySqlConnection> ConnectWithRetryAsync()
-        {
-            for (int attempt = 1; attempt <= MaxRetries; attempt++)
-            {
-                // 等待时间随重试次数增加：200ms, 400ms, 600ms...
-                await Task.Delay(BaseDelayMs * attempt);
-
-                var conn = new MySqlConnection(ConnectionString);
-                try
-                {
-                    await conn.OpenAsync();
-                    return conn; // 成功连接，返回给调用方处理
-                }
-                catch (MySqlException ex)
-                {
-                    conn.Dispose();
-                    // 1130 = Host not allowed（白名单未生效）, 0 = 无法连接
-                    bool canRetry = (ex.Number == 1130 || ex.Number == 0) && attempt < MaxRetries;
-                    if (!canRetry) break;
-                }
-                catch
-                {
-                    conn.Dispose();
-                    break;
-                }
-            }
-            return null;
         }
 
         /// <summary>
@@ -219,32 +157,9 @@ namespace WinForm_RBAC
                 MessageBox.Show("您尚未被分配任何权限，请联系管理员。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
 
-            // 保存全局状态
             GlobalInfo.CurrentUserId = userId;
             GlobalInfo.CurrentUserName = user;
             return true;
-        }
-
-        private void SendKnock()
-        {
-            try
-            {
-                byte[] key = HexToBytes(_knockKeyHex);
-                byte[] packet = KnockPacket.Build(key);
-                using (var udp = new UdpClient())
-                    udp.Send(packet, packet.Length, _proxyHost, _knockPort);
-            }
-            catch { /* 敲门静默失败，由连接重试逻辑处理结果 */ }
-        }
-
-        private static byte[] HexToBytes(string hex)
-        {
-            hex = hex.Replace(" ", "").Replace("-", "");
-            if (hex.Length % 2 != 0) throw new FormatException("十六进制密钥长度非法");
-            var result = new byte[hex.Length / 2];
-            for (int i = 0; i < result.Length; i++)
-                result[i] = Convert.ToByte(hex.Substring(i * 2, 2), 16);
-            return result;
         }
     }
 }
