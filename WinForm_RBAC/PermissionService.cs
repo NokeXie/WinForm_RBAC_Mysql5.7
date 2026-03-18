@@ -576,5 +576,35 @@ namespace WinForm_RBAC
             catch { /* 记录日志 */ }
             return userNames;
         }
+        /// <summary>
+        /// 直接修改指定用户的密码
+        /// </summary>
+        public bool UpdateUserPasswordDirectly(int userId, string newPwd)
+        {
+            // 将明文密码加密为哈希
+            string passwordHash = PasswordHasher.HashPassword(newPwd);
+
+            const string sql = "UPDATE Users SET PasswordHash = @Pwd WHERE UserID = @UID";
+
+            try
+            {
+                using (var conn = new SqlConnection(_connectionString))
+                {
+                    conn.Open();
+                    using (var cmd = new SqlCommand(sql, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@Pwd", passwordHash);
+                        cmd.Parameters.AddWithValue("@UID", userId);
+
+                        return cmd.ExecuteNonQuery() > 0;
+                    }
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
     }
+
 }

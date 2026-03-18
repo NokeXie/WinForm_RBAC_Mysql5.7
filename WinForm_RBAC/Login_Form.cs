@@ -90,7 +90,12 @@ namespace WinForm_RBAC
                                         "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     }
 
-                    LogonUser = user;
+                    // ── 第三步：保存全局用户信息 (新增部分) ──────────────────────────────
+                    // 将验证成功的 userId 存入全局变量，供 Main_Form 修改密码使用
+                    GlobalInfo.CurrentUserId = userId;
+                    GlobalInfo.CurrentUserName = user;
+
+                    LogonUser = user; // 你原有的逻辑
                     this.DialogResult = DialogResult.OK;
                     this.Close();
                 }

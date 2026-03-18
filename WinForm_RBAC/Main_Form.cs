@@ -7,7 +7,6 @@ using System.Configuration;
 using System.Data;
 using System.Linq;
 using System.Windows.Forms;
-
 namespace WinForm_RBAC
 {
     public partial class Main_Form : XtraForm
@@ -512,6 +511,46 @@ namespace WinForm_RBAC
                 else
                 {
                     XtraMessageBox.Show("修改失败：名称可能已存在或数据库连接异常。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        private void barButtonItem3_ItemClick(object sender, ItemClickEventArgs e)
+        {
+            // 1. 获取当前登录用户的 ID 和名称
+            int currentUserId = GlobalInfo.CurrentUserId;
+            string currentUserName = GlobalInfo.CurrentUserName;
+
+            // 2. 直接调用 XtraInputBox.Show 的重载方法
+            // 参数说明：提示文字, 标题, 默认值
+            string prompt = $"请输入用户「{currentUserName}」的新密码：";
+            string caption = "安全设置";
+
+            // 注意：老版本的 XtraInputBox.Show 不支持直接在这里设置 PasswordChar
+            // 我们先获取输入结果
+            object result = DevExpress.XtraEditors.XtraInputBox.Show(prompt, caption, "");
+
+            // 3. 处理结果
+            if (result != null)
+            {
+                string newPwd = result.ToString().Trim();
+
+                if (string.IsNullOrWhiteSpace(newPwd))
+                {
+                    DevExpress.XtraEditors.XtraMessageBox.Show("密码不能为空！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+
+                // 4. 调用 Service 层执行更新（内部处理哈希加密）
+                bool isSuccess = _permissionService.UpdateUserPasswordDirectly(currentUserId, newPwd);
+
+                if (isSuccess)
+                {
+                    DevExpress.XtraEditors.XtraMessageBox.Show("密码修改成功！下次登录请使用新密码。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                }
+                else
+                {
+                    DevExpress.XtraEditors.XtraMessageBox.Show("修改失败，请检查数据库连接。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
         }

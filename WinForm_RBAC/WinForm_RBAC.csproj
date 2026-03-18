@@ -143,6 +143,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="GlobalInfo.cs" />
     <Compile Include="HideAllPage.cs" />
     <Compile Include="PasswordHasher.cs" />
     <Compile Include="Login_Form.cs">
