@@ -30,20 +30,33 @@ namespace WinForm_RBAC
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            DevExpress.DataAccess.Sql.SelectQuery selectQuery2 = new DevExpress.DataAccess.Sql.SelectQuery();
+            DevExpress.DataAccess.Sql.SelectQuery selectQuery1 = new DevExpress.DataAccess.Sql.SelectQuery();
+            DevExpress.DataAccess.Sql.Column column1 = new DevExpress.DataAccess.Sql.Column();
+            DevExpress.DataAccess.Sql.ColumnExpression columnExpression1 = new DevExpress.DataAccess.Sql.ColumnExpression();
+            DevExpress.DataAccess.Sql.Table table1 = new DevExpress.DataAccess.Sql.Table();
+            DevExpress.DataAccess.Sql.Column column2 = new DevExpress.DataAccess.Sql.Column();
+            DevExpress.DataAccess.Sql.ColumnExpression columnExpression2 = new DevExpress.DataAccess.Sql.ColumnExpression();
+            DevExpress.DataAccess.Sql.Table table2 = new DevExpress.DataAccess.Sql.Table();
+            DevExpress.DataAccess.Sql.Column column3 = new DevExpress.DataAccess.Sql.Column();
+            DevExpress.DataAccess.Sql.ColumnExpression columnExpression3 = new DevExpress.DataAccess.Sql.ColumnExpression();
             DevExpress.DataAccess.Sql.Column column4 = new DevExpress.DataAccess.Sql.Column();
             DevExpress.DataAccess.Sql.ColumnExpression columnExpression4 = new DevExpress.DataAccess.Sql.ColumnExpression();
-            DevExpress.DataAccess.Sql.Table table4 = new DevExpress.DataAccess.Sql.Table();
             DevExpress.DataAccess.Sql.Column column5 = new DevExpress.DataAccess.Sql.Column();
             DevExpress.DataAccess.Sql.ColumnExpression columnExpression5 = new DevExpress.DataAccess.Sql.ColumnExpression();
-            DevExpress.DataAccess.Sql.Table table5 = new DevExpress.DataAccess.Sql.Table();
+            DevExpress.DataAccess.Sql.Table table3 = new DevExpress.DataAccess.Sql.Table();
             DevExpress.DataAccess.Sql.Column column6 = new DevExpress.DataAccess.Sql.Column();
             DevExpress.DataAccess.Sql.ColumnExpression columnExpression6 = new DevExpress.DataAccess.Sql.ColumnExpression();
-            DevExpress.DataAccess.Sql.Join join3 = new DevExpress.DataAccess.Sql.Join();
-            DevExpress.DataAccess.Sql.RelationColumnInfo relationColumnInfo3 = new DevExpress.DataAccess.Sql.RelationColumnInfo();
-            DevExpress.DataAccess.Sql.Table table6 = new DevExpress.DataAccess.Sql.Table();
-            DevExpress.DataAccess.Sql.Join join4 = new DevExpress.DataAccess.Sql.Join();
-            DevExpress.DataAccess.Sql.RelationColumnInfo relationColumnInfo4 = new DevExpress.DataAccess.Sql.RelationColumnInfo();
+            DevExpress.DataAccess.Sql.Column column7 = new DevExpress.DataAccess.Sql.Column();
+            DevExpress.DataAccess.Sql.ColumnExpression columnExpression7 = new DevExpress.DataAccess.Sql.ColumnExpression();
+            DevExpress.DataAccess.Sql.Column column8 = new DevExpress.DataAccess.Sql.Column();
+            DevExpress.DataAccess.Sql.ColumnExpression columnExpression8 = new DevExpress.DataAccess.Sql.ColumnExpression();
+            DevExpress.DataAccess.Sql.AllColumns allColumns1 = new DevExpress.DataAccess.Sql.AllColumns();
+            DevExpress.DataAccess.Sql.AllColumns allColumns2 = new DevExpress.DataAccess.Sql.AllColumns();
+            DevExpress.DataAccess.Sql.AllColumns allColumns3 = new DevExpress.DataAccess.Sql.AllColumns();
+            DevExpress.DataAccess.Sql.Join join1 = new DevExpress.DataAccess.Sql.Join();
+            DevExpress.DataAccess.Sql.RelationColumnInfo relationColumnInfo1 = new DevExpress.DataAccess.Sql.RelationColumnInfo();
+            DevExpress.DataAccess.Sql.Join join2 = new DevExpress.DataAccess.Sql.Join();
+            DevExpress.DataAccess.Sql.RelationColumnInfo relationColumnInfo2 = new DevExpress.DataAccess.Sql.RelationColumnInfo();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Main_Form));
             this.主菜单 = new DevExpress.XtraBars.BarManager(this.components);
             this.bar2 = new DevExpress.XtraBars.Bar();
@@ -51,7 +64,6 @@ namespace WinForm_RBAC
             this.barButtonItem1 = new DevExpress.XtraBars.BarButtonItem();
             this.barButtonItem2 = new DevExpress.XtraBars.BarButtonItem();
             this.barButtonItem3 = new DevExpress.XtraBars.BarButtonItem();
-            this.barButtonItem4 = new DevExpress.XtraBars.BarButtonItem();
             this.bar3 = new DevExpress.XtraBars.Bar();
             this.barDockControlTop = new DevExpress.XtraBars.BarDockControl();
             this.barDockControlBottom = new DevExpress.XtraBars.BarDockControl();
@@ -61,6 +73,8 @@ namespace WinForm_RBAC
             this.xtraTabControl1 = new DevExpress.XtraTab.XtraTabControl();
             this.用户管理 = new DevExpress.XtraTab.XtraTabPage();
             this.layoutControl2 = new DevExpress.XtraLayout.LayoutControl();
+            this.simpleButton5 = new DevExpress.XtraEditors.SimpleButton();
+            this.simpleButton4 = new DevExpress.XtraEditors.SimpleButton();
             this.btnDeleteUser = new DevExpress.XtraEditors.SimpleButton();
             this.btnEditUser = new DevExpress.XtraEditors.SimpleButton();
             this.btnAddUser = new DevExpress.XtraEditors.SimpleButton();
@@ -75,6 +89,8 @@ namespace WinForm_RBAC
             this.layoutControlItem3 = new DevExpress.XtraLayout.LayoutControlItem();
             this.layoutControlItem4 = new DevExpress.XtraLayout.LayoutControlItem();
             this.layoutControlItem5 = new DevExpress.XtraLayout.LayoutControlItem();
+            this.layoutControlItem12 = new DevExpress.XtraLayout.LayoutControlItem();
+            this.layoutControlItem13 = new DevExpress.XtraLayout.LayoutControlItem();
             this.角色管理 = new DevExpress.XtraTab.XtraTabPage();
             this.layoutControl3 = new DevExpress.XtraLayout.LayoutControl();
             this.simpleButton2 = new DevExpress.XtraEditors.SimpleButton();
@@ -107,6 +123,8 @@ namespace WinForm_RBAC
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem3)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem4)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem5)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem12)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem13)).BeginInit();
             this.角色管理.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControl3)).BeginInit();
             this.layoutControl3.SuspendLayout();
@@ -137,10 +155,9 @@ namespace WinForm_RBAC
             this.系统管理,
             this.barButtonItem1,
             this.barButtonItem2,
-            this.barButtonItem3,
-            this.barButtonItem4});
+            this.barButtonItem3});
             this.主菜单.MainMenu = this.bar2;
-            this.主菜单.MaxItemId = 12;
+            this.主菜单.MaxItemId = 14;
             this.主菜单.StatusBar = this.bar3;
             // 
             // bar2
@@ -162,8 +179,7 @@ namespace WinForm_RBAC
             this.系统管理.LinksPersistInfo.AddRange(new DevExpress.XtraBars.LinkPersistInfo[] {
             new DevExpress.XtraBars.LinkPersistInfo(this.barButtonItem1),
             new DevExpress.XtraBars.LinkPersistInfo(this.barButtonItem2),
-            new DevExpress.XtraBars.LinkPersistInfo(this.barButtonItem3),
-            new DevExpress.XtraBars.LinkPersistInfo(this.barButtonItem4)});
+            new DevExpress.XtraBars.LinkPersistInfo(this.barButtonItem3)});
             this.系统管理.Name = "系统管理";
             this.系统管理.Tag = "SystemManger";
             // 
@@ -189,13 +205,6 @@ namespace WinForm_RBAC
             this.barButtonItem3.Id = 3;
             this.barButtonItem3.Name = "barButtonItem3";
             this.barButtonItem3.Tag = "SystemManger.PassWord";
-            // 
-            // barButtonItem4
-            // 
-            this.barButtonItem4.Caption = "注销系统";
-            this.barButtonItem4.Id = 4;
-            this.barButtonItem4.Name = "barButtonItem4";
-            this.barButtonItem4.Tag = "SystemManger.LogOff";
             // 
             // bar3
             // 
@@ -274,6 +283,8 @@ namespace WinForm_RBAC
             // 
             // layoutControl2
             // 
+            this.layoutControl2.Controls.Add(this.simpleButton5);
+            this.layoutControl2.Controls.Add(this.simpleButton4);
             this.layoutControl2.Controls.Add(this.btnDeleteUser);
             this.layoutControl2.Controls.Add(this.btnEditUser);
             this.layoutControl2.Controls.Add(this.btnAddUser);
@@ -286,35 +297,60 @@ namespace WinForm_RBAC
             this.layoutControl2.TabIndex = 0;
             this.layoutControl2.Text = "layoutControl2";
             // 
+            // simpleButton5
+            // 
+            this.simpleButton5.Location = new System.Drawing.Point(732, 620);
+            this.simpleButton5.Name = "simpleButton5";
+            this.simpleButton5.Size = new System.Drawing.Size(235, 22);
+            this.simpleButton5.StyleController = this.layoutControl2;
+            this.simpleButton5.TabIndex = 9;
+            this.simpleButton5.Tag = "SystemManger.UserManger.Enable";
+            this.simpleButton5.Text = "启用用户";
+            this.simpleButton5.Click += new System.EventHandler(this.simpleButton5_Click);
+            // 
+            // simpleButton4
+            // 
+            this.simpleButton4.Location = new System.Drawing.Point(971, 620);
+            this.simpleButton4.Name = "simpleButton4";
+            this.simpleButton4.Size = new System.Drawing.Size(236, 22);
+            this.simpleButton4.StyleController = this.layoutControl2;
+            this.simpleButton4.TabIndex = 8;
+            this.simpleButton4.Tag = "SystemManger.UserManger.Disable";
+            this.simpleButton4.Text = "禁用用户";
+            this.simpleButton4.Click += new System.EventHandler(this.simpleButton4_Click);
+            // 
             // btnDeleteUser
             // 
-            this.btnDeleteUser.Location = new System.Drawing.Point(896, 620);
+            this.btnDeleteUser.Location = new System.Drawing.Point(492, 620);
             this.btnDeleteUser.Name = "btnDeleteUser";
-            this.btnDeleteUser.Size = new System.Drawing.Size(311, 22);
+            this.btnDeleteUser.Size = new System.Drawing.Size(236, 22);
             this.btnDeleteUser.StyleController = this.layoutControl2;
             this.btnDeleteUser.TabIndex = 7;
             this.btnDeleteUser.Tag = "SystemManger.UserManger.Delete";
             this.btnDeleteUser.Text = "删除用户";
+            this.btnDeleteUser.Click += new System.EventHandler(this.btnDeleteUser_Click);
             // 
             // btnEditUser
             // 
-            this.btnEditUser.Location = new System.Drawing.Point(411, 620);
+            this.btnEditUser.Location = new System.Drawing.Point(252, 620);
             this.btnEditUser.Name = "btnEditUser";
-            this.btnEditUser.Size = new System.Drawing.Size(481, 22);
+            this.btnEditUser.Size = new System.Drawing.Size(236, 22);
             this.btnEditUser.StyleController = this.layoutControl2;
             this.btnEditUser.TabIndex = 6;
             this.btnEditUser.Tag = "SystemManger.UserManger.Edit";
             this.btnEditUser.Text = "编辑用户";
+            this.btnEditUser.Click += new System.EventHandler(this.btnEditUser_Click);
             // 
             // btnAddUser
             // 
             this.btnAddUser.Location = new System.Drawing.Point(12, 620);
             this.btnAddUser.Name = "btnAddUser";
-            this.btnAddUser.Size = new System.Drawing.Size(395, 22);
+            this.btnAddUser.Size = new System.Drawing.Size(236, 22);
             this.btnAddUser.StyleController = this.layoutControl2;
             this.btnAddUser.TabIndex = 5;
             this.btnAddUser.Tag = "SystemManger.UserManger.Add";
             this.btnAddUser.Text = "新增用户";
+            this.btnAddUser.Click += new System.EventHandler(this.btnAddUser_Click);
             // 
             // gridControl1
             // 
@@ -333,45 +369,73 @@ namespace WinForm_RBAC
             // 
             this.sqlDataSource1.ConnectionName = "DataBase_Noke_system";
             this.sqlDataSource1.Name = "sqlDataSource1";
-            column4.Alias = "用户名";
-            columnExpression4.ColumnName = "UserName";
-            table4.MetaSerializable = "<Meta X=\"30\" Y=\"30\" Width=\"125\" Height=\"143\" />";
-            table4.Name = "Users";
-            columnExpression4.Table = table4;
+            column1.Alias = "用户名";
+            columnExpression1.ColumnName = "UserName";
+            table1.MetaSerializable = "<Meta X=\"30\" Y=\"30\" Width=\"125\" Height=\"143\" />";
+            table1.Name = "Users";
+            columnExpression1.Table = table1;
+            column1.Expression = columnExpression1;
+            column2.Alias = "角色名";
+            columnExpression2.ColumnName = "RoleName";
+            table2.MetaSerializable = "<Meta X=\"340\" Y=\"30\" Width=\"125\" Height=\"103\" />";
+            table2.Name = "Roles";
+            columnExpression2.Table = table2;
+            column2.Expression = columnExpression2;
+            column3.Alias = "开启状态";
+            columnExpression3.ColumnName = "Enable";
+            columnExpression3.Table = table1;
+            column3.Expression = columnExpression3;
+            columnExpression4.ColumnName = "UserID";
+            columnExpression4.Table = table1;
             column4.Expression = columnExpression4;
-            column5.Alias = "角色名";
-            columnExpression5.ColumnName = "RoleName";
-            table5.MetaSerializable = "<Meta X=\"340\" Y=\"30\" Width=\"125\" Height=\"103\" />";
-            table5.Name = "Roles";
-            columnExpression5.Table = table5;
+            column5.Alias = "UserRoles_UserID";
+            columnExpression5.ColumnName = "UserID";
+            table3.MetaSerializable = "<Meta X=\"185\" Y=\"30\" Width=\"125\" Height=\"103\" />";
+            table3.Name = "UserRoles";
+            columnExpression5.Table = table3;
             column5.Expression = columnExpression5;
-            column6.Alias = "开启状态";
-            columnExpression6.ColumnName = "Enable";
-            columnExpression6.Table = table4;
+            columnExpression6.ColumnName = "RoleID";
+            columnExpression6.Table = table3;
             column6.Expression = columnExpression6;
-            selectQuery2.Columns.Add(column4);
-            selectQuery2.Columns.Add(column5);
-            selectQuery2.Columns.Add(column6);
-            selectQuery2.Name = "Users";
-            relationColumnInfo3.NestedKeyColumn = "UserID";
-            relationColumnInfo3.ParentKeyColumn = "UserID";
-            join3.KeyColumns.Add(relationColumnInfo3);
-            table6.MetaSerializable = "<Meta X=\"185\" Y=\"30\" Width=\"125\" Height=\"103\" />";
-            table6.Name = "UserRoles";
-            join3.Nested = table6;
-            join3.Parent = table4;
-            relationColumnInfo4.NestedKeyColumn = "RoleID";
-            relationColumnInfo4.ParentKeyColumn = "RoleID";
-            join4.KeyColumns.Add(relationColumnInfo4);
-            join4.Nested = table5;
-            join4.Parent = table6;
-            selectQuery2.Relations.Add(join3);
-            selectQuery2.Relations.Add(join4);
-            selectQuery2.Tables.Add(table4);
-            selectQuery2.Tables.Add(table6);
-            selectQuery2.Tables.Add(table5);
+            column7.Alias = "Roles_RoleID";
+            columnExpression7.ColumnName = "RoleID";
+            columnExpression7.Table = table2;
+            column7.Expression = columnExpression7;
+            columnExpression8.ColumnName = "PasswordHash";
+            columnExpression8.Table = table1;
+            column8.Expression = columnExpression8;
+            allColumns1.Table = table1;
+            allColumns2.Table = table3;
+            allColumns3.Table = table2;
+            selectQuery1.Columns.Add(column1);
+            selectQuery1.Columns.Add(column2);
+            selectQuery1.Columns.Add(column3);
+            selectQuery1.Columns.Add(column4);
+            selectQuery1.Columns.Add(column5);
+            selectQuery1.Columns.Add(column6);
+            selectQuery1.Columns.Add(column7);
+            selectQuery1.Columns.Add(column8);
+            selectQuery1.Columns.Add(allColumns1);
+            selectQuery1.Columns.Add(allColumns2);
+            selectQuery1.Columns.Add(allColumns3);
+            selectQuery1.Name = "Users";
+            relationColumnInfo1.NestedKeyColumn = "UserID";
+            relationColumnInfo1.ParentKeyColumn = "UserID";
+            join1.KeyColumns.Add(relationColumnInfo1);
+            join1.Nested = table3;
+            join1.Parent = table1;
+            relationColumnInfo2.NestedKeyColumn = "RoleID";
+            relationColumnInfo2.ParentKeyColumn = "RoleID";
+            join2.KeyColumns.Add(relationColumnInfo2);
+            join2.Nested = table2;
+            join2.Parent = table3;
+            selectQuery1.Relations.Add(join1);
+            selectQuery1.Relations.Add(join2);
+            selectQuery1.Tables.Add(table1);
+            selectQuery1.Tables.Add(table3);
+            selectQuery1.Tables.Add(table2);
             this.sqlDataSource1.Queries.AddRange(new DevExpress.DataAccess.Sql.SqlQuery[] {
-            selectQuery2});
+            selectQuery1});
             this.sqlDataSource1.ResultSchemaSerializable = resources.GetString("sqlDataSource1.ResultSchemaSerializable");
             // 
             // gridView1
@@ -412,7 +476,9 @@ namespace WinForm_RBAC
             this.layoutControlItem2,
             this.layoutControlItem3,
             this.layoutControlItem4,
-            this.layoutControlItem5});
+            this.layoutControlItem5,
+            this.layoutControlItem12,
+            this.layoutControlItem13});
             this.layoutControlGroup1.Name = "layoutControlGroup1";
             this.layoutControlGroup1.Size = new System.Drawing.Size(1219, 654);
             this.layoutControlGroup1.TextVisible = false;
@@ -431,27 +497,45 @@ namespace WinForm_RBAC
             this.layoutControlItem3.Control = this.btnAddUser;
             this.layoutControlItem3.Location = new System.Drawing.Point(0, 608);
             this.layoutControlItem3.Name = "layoutControlItem3";
-            this.layoutControlItem3.Size = new System.Drawing.Size(399, 26);
+            this.layoutControlItem3.Size = new System.Drawing.Size(240, 26);
             this.layoutControlItem3.TextSize = new System.Drawing.Size(0, 0);
             this.layoutControlItem3.TextVisible = false;
             // 
             // layoutControlItem4
             // 
             this.layoutControlItem4.Control = this.btnEditUser;
-            this.layoutControlItem4.Location = new System.Drawing.Point(399, 608);
+            this.layoutControlItem4.Location = new System.Drawing.Point(240, 608);
             this.layoutControlItem4.Name = "layoutControlItem4";
-            this.layoutControlItem4.Size = new System.Drawing.Size(485, 26);
+            this.layoutControlItem4.Size = new System.Drawing.Size(240, 26);
             this.layoutControlItem4.TextSize = new System.Drawing.Size(0, 0);
             this.layoutControlItem4.TextVisible = false;
             // 
             // layoutControlItem5
             // 
             this.layoutControlItem5.Control = this.btnDeleteUser;
-            this.layoutControlItem5.Location = new System.Drawing.Point(884, 608);
+            this.layoutControlItem5.Location = new System.Drawing.Point(480, 608);
             this.layoutControlItem5.Name = "layoutControlItem5";
-            this.layoutControlItem5.Size = new System.Drawing.Size(315, 26);
+            this.layoutControlItem5.Size = new System.Drawing.Size(240, 26);
             this.layoutControlItem5.TextSize = new System.Drawing.Size(0, 0);
             this.layoutControlItem5.TextVisible = false;
+            // 
+            // layoutControlItem12
+            // 
+            this.layoutControlItem12.Control = this.simpleButton4;
+            this.layoutControlItem12.Location = new System.Drawing.Point(959, 608);
+            this.layoutControlItem12.Name = "layoutControlItem12";
+            this.layoutControlItem12.Size = new System.Drawing.Size(240, 26);
+            this.layoutControlItem12.TextSize = new System.Drawing.Size(0, 0);
+            this.layoutControlItem12.TextVisible = false;
+            // 
+            // layoutControlItem13
+            // 
+            this.layoutControlItem13.Control = this.simpleButton5;
+            this.layoutControlItem13.Location = new System.Drawing.Point(720, 608);
+            this.layoutControlItem13.Name = "layoutControlItem13";
+            this.layoutControlItem13.Size = new System.Drawing.Size(239, 26);
+            this.layoutControlItem13.TextSize = new System.Drawing.Size(0, 0);
+            this.layoutControlItem13.TextVisible = false;
             // 
             // 角色管理
             // 
@@ -652,6 +736,8 @@ namespace WinForm_RBAC
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem3)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem4)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem5)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem12)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.layoutControlItem13)).EndInit();
             this.角色管理.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.layoutControl3)).EndInit();
             this.layoutControl3.ResumeLayout(false);
@@ -700,7 +786,6 @@ namespace WinForm_RBAC
         private DevExpress.XtraLayout.LayoutControlGroup Root;
         private DevExpress.XtraLayout.LayoutControlItem layoutControlItem1;
         private DevExpress.XtraBars.BarButtonItem barButtonItem3;
-        private DevExpress.XtraBars.BarButtonItem barButtonItem4;
         private DevExpress.DataAccess.Sql.SqlDataSource sqlDataSource1;
         private DevExpress.XtraGrid.Columns.GridColumn col用户名;
         private DevExpress.XtraGrid.Columns.GridColumn col角色名;
@@ -720,5 +805,9 @@ namespace WinForm_RBAC
         private DevExpress.XtraLayout.LayoutControlItem layoutControlItem10;
         private DevExpress.XtraEditors.SimpleButton simpleButton2;
         private DevExpress.XtraLayout.LayoutControlItem layoutControlItem11;
+        private DevExpress.XtraEditors.SimpleButton simpleButton4;
+        private DevExpress.XtraLayout.LayoutControlItem layoutControlItem12;
+        private DevExpress.XtraEditors.SimpleButton simpleButton5;
+        private DevExpress.XtraLayout.LayoutControlItem layoutControlItem13;
     }
 }

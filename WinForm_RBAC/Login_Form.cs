@@ -7,7 +7,7 @@ namespace WinForm_RBAC
 {
     public partial class Login_Form : DevExpress.XtraEditors.XtraForm
     {
-        private readonly string connectionString;
+        public readonly string connectionString;
 
         public static string LogonUser { get; private set; }
 
