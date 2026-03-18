@@ -415,5 +415,133 @@ namespace WinForm_RBAC
                 }
             }
         }
+        /// <summary>
+        /// 新增角色
+        /// </summary>
+        /// <param name="roleName">角色名称</param>
+        /// <returns>是否成功</returns>
+        public bool AddRole(string roleName)
+        {
+            // 1. 先检查重名，防止数据库报错
+            const string checkSql = "SELECT COUNT(1) FROM Roles WHERE RoleName = @Name";
+            const string insertSql = "INSERT INTO Roles (RoleName) VALUES (@Name)";
+
+            try
+            {
+                using (var conn = new SqlConnection(_connectionString))
+                {
+                    conn.Open();
+
+                    // 检查重复
+                    using (var cmdCheck = new SqlCommand(checkSql, conn))
+                    {
+                        cmdCheck.Parameters.AddWithValue("@Name", roleName);
+                        int count = Convert.ToInt32(cmdCheck.ExecuteScalar());
+                        if (count > 0) return false; // 名称已存在
+                    }
+
+                    // 执行插入
+                    using (var cmdInsert = new SqlCommand(insertSql, conn))
+                    {
+                        cmdInsert.Parameters.AddWithValue("@Name", roleName);
+                        return cmdInsert.ExecuteNonQuery() > 0;
+                    }
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        /// <summary>
+        /// 删除角色
+        /// </summary>
+        /// <returns>0:成功, 1:有用户引用, -1:失败</returns>
+        public int DeleteRole(int roleId)
+        {
+            using (var conn = new SqlConnection(_connectionString))
+            {
+                conn.Open();
+
+                // 1. 检查是否有用户关联（防止误删导致用户丢失角色）
+                const string checkUserSql = "SELECT COUNT(1) FROM UserRoles WHERE RoleID = @RID";
+                using (var cmdCheck = new SqlCommand(checkUserSql, conn))
+                {
+                    cmdCheck.Parameters.AddWithValue("@RID", roleId);
+                    if (Convert.ToInt32(cmdCheck.ExecuteScalar()) > 0) return 1;
+                }
+
+                // 2. 使用事务删除权限关联和角色本身
+                using (var trans = conn.BeginTransaction())
+                {
+                    try
+                    {
+                        // 先删权限关联（子表）
+                        const string delPermSql = "DELETE FROM RolePermissions WHERE RoleID = @RID";
+                        using (var cmd = new SqlCommand(delPermSql, conn, trans))
+                        {
+                            cmd.Parameters.AddWithValue("@RID", roleId);
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        // 再删角色本身（主表）
+                        const string delRoleSql = "DELETE FROM Roles WHERE RoleID = @RID";
+                        using (var cmd = new SqlCommand(delRoleSql, conn, trans))
+                        {
+                            cmd.Parameters.AddWithValue("@RID", roleId);
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        trans.Commit();
+                        return 0;
+                    }
+                    catch
+                    {
+                        trans.Rollback();
+                        return -1;
+                    }
+                }
+            }
+        }
+        /// <summary>
+        /// 修改角色名称
+        /// </summary>
+        /// <param name="roleId">角色ID</param>
+        /// <param name="newRoleName">新名称</param>
+        /// <returns>是否成功</returns>
+        public bool UpdateRoleName(int roleId, string newRoleName)
+        {
+            // 1. 检查新名称是否已被其他角色占用
+            const string checkSql = "SELECT COUNT(1) FROM Roles WHERE RoleName = @Name AND RoleID != @RID";
+            const string updateSql = "UPDATE Roles SET RoleName = @Name WHERE RoleID = @RID";
+
+            try
+            {
+                using (var conn = new SqlConnection(_connectionString))
+                {
+                    conn.Open();
+
+                    // 检查重名
+                    using (var cmdCheck = new SqlCommand(checkSql, conn))
+                    {
+                        cmdCheck.Parameters.AddWithValue("@Name", newRoleName);
+                        cmdCheck.Parameters.AddWithValue("@RID", roleId);
+                        if (Convert.ToInt32(cmdCheck.ExecuteScalar()) > 0) return false;
+                    }
+
+                    // 执行更新
+                    using (var cmdUpdate = new SqlCommand(updateSql, conn))
+                    {
+                        cmdUpdate.Parameters.AddWithValue("@Name", newRoleName);
+                        cmdUpdate.Parameters.AddWithValue("@RID", roleId);
+                        return cmdUpdate.ExecuteNonQuery() > 0;
+                    }
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
     }
 }

@@ -403,5 +403,108 @@ namespace WinForm_RBAC
                 }
             }
         }
+
+        private void simpleButton1_Click(object sender, EventArgs e)
+        {
+            // 1. 弹出输入对话框获取新角色名称
+            string newRoleName = XtraInputBox.Show("请输入新角色的名称：", "新增角色", "");
+
+            if (!string.IsNullOrWhiteSpace(newRoleName))
+            {
+                // 2. 调用服务层检查并保存
+                bool isSuccess = _permissionService.AddRole(newRoleName.Trim());
+
+                if (isSuccess)
+                {
+                    XtraMessageBox.Show($"角色「{newRoleName}」新增成功！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                    // 3. 刷新角色列表
+                    LoadRolesToListBox();
+
+                    // 4. 自动选中最后新增的那一项
+                    if (listBoxControl1.Items.Count > 0)
+                    {
+                        listBoxControl1.SelectedIndex = listBoxControl1.Items.Count - 1;
+                    }
+                }
+                else
+                {
+                    XtraMessageBox.Show("新增失败：角色名称可能已存在或数据库连接异常。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        private void simpleButton3_Click(object sender, EventArgs e)
+        {
+            // 1. 获取选中的角色项
+            if (!(listBoxControl1.SelectedItem is DevExpress.XtraEditors.Controls.ImageListBoxItem selectedItem))
+            {
+                XtraMessageBox.Show("请先选择要删除的角色！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            int roleId = Convert.ToInt32(selectedItem.Tag);
+            string roleName = selectedItem.Value.ToString();
+
+            // 2. 弹出二次确认框
+            string msg = $"确定要永久删除角色「{roleName}」吗？\n此操作将同时清除该角色的所有权限配置。";
+            if (XtraMessageBox.Show(msg, "删除确认", MessageBoxButtons.YesNo, MessageBoxIcon.Stop) == DialogResult.Yes)
+            {
+                // 3. 调用服务层执行删除
+                // 返回 0: 成功, 1: 有用户关联, -1: 数据库错误
+                int result = _permissionService.DeleteRole(roleId);
+
+                if (result == 0)
+                {
+                    XtraMessageBox.Show("角色已成功删除。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                    // 4. 刷新角色列表并清空权限树勾选
+                    LoadRolesToListBox();
+                    treeList1.UncheckAll();
+                }
+                else if (result == 1)
+                {
+                    XtraMessageBox.Show($"无法删除：该角色下仍有活跃用户，请先更改相关用户的角色。", "警告", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
+                else
+                {
+                    XtraMessageBox.Show("删除失败，请联系管理员或检查日志。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
+        private void simpleButton6_Click(object sender, EventArgs e)
+        {
+            // 1. 验证是否选中了角色
+            if (!(listBoxControl1.SelectedItem is DevExpress.XtraEditors.Controls.ImageListBoxItem selectedItem))
+            {
+                XtraMessageBox.Show("请先选择要修改的角色！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            int roleId = Convert.ToInt32(selectedItem.Tag);
+            string oldRoleName = selectedItem.Value.ToString();
+
+            // 2. 弹出输入对话框，并赋初始值为旧名称
+            string newRoleName = XtraInputBox.Show("请输入新的角色名称：", "修改角色名称", oldRoleName);
+
+            // 3. 只有当名称发生变化且不为空时才执行更新
+            if (!string.IsNullOrWhiteSpace(newRoleName) && newRoleName != oldRoleName)
+            {
+                bool isSuccess = _permissionService.UpdateRoleName(roleId, newRoleName.Trim());
+
+                if (isSuccess)
+                {
+                    XtraMessageBox.Show("角色名称修改成功！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+
+                    // 4. 刷新角色列表并保持焦点
+                    InitializeRoleManagement();
+                }
+                else
+                {
+                    XtraMessageBox.Show("修改失败：名称可能已存在或数据库连接异常。", "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
     }
 }
