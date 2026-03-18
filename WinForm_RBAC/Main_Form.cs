@@ -61,14 +61,46 @@ namespace WinForm_RBAC
 
         private void InitializeRoleManagement()
         {
-            // 1. 加载权限树
+            // 1. 备份当前选中的角色 ID (在你的代码里 ID 存在 Tag 属性中)
+            object lastRoleId = null;
+            if (listBoxControl1.SelectedItem is DevExpress.XtraEditors.Controls.ImageListBoxItem selectedItem)
+            {
+                lastRoleId = selectedItem.Tag;
+            }
+
+            // 2. 加载数据
             LoadPermissionsTree(treeList1);
+            LoadRolesToListBox(); // 这里会 Clear 并重新 Add 项
 
-            // 2. 加载角色列表
-            LoadRolesToListBox();
+            // 3. 恢复角色焦点
+            if (lastRoleId != null)
+            {
+                bool found = false;
+                for (int i = 0; i < listBoxControl1.Items.Count; i++)
+                {
+                    if (listBoxControl1.Items[i] is DevExpress.XtraEditors.Controls.ImageListBoxItem item)
+                    {
+                        // 比较 Tag (RoleID)，如果匹配则选中
+                        if (item.Tag != null && item.Tag.ToString() == lastRoleId.ToString())
+                        {
+                            listBoxControl1.SelectedIndex = i;
+                            found = true;
+                            break;
+                        }
+                    }
+                }
 
-            // 3. 默认选中第一个角色
-            if (listBoxControl1.Items.Count > 0)
+                // 如果按 ID 没找到，尝试按显示文本匹配（兜底）
+                if (!found)
+                {
+                    // 你代码中 Value 存的是 RoleName
+                    // 这里不需要手动处理，因为下面的逻辑会处理
+                }
+            }
+
+            // 4. 只有在确实没找回（比如之前没选，或角色被删了）时，才默认选中第一个
+            // 注意：如果上面找到了，SelectedIndex 就不会是 -1
+            if (listBoxControl1.SelectedIndex == -1 && listBoxControl1.Items.Count > 0)
             {
                 listBoxControl1.SelectedIndex = 0;
             }
@@ -189,9 +221,15 @@ namespace WinForm_RBAC
 
         private void simpleButton2_Click(object sender, EventArgs e)
         {
-            var pm = new PermissionManager(this, ConfigurationManager.ConnectionStrings["DataBase_Noke_system"].ConnectionString);
+            string connString = ConfigurationManager.ConnectionStrings["DataBase_Noke_system"].ConnectionString;
+            var pm = new PermissionManager(this, connString);
+
+            // 同步数据库
             pm.SyncModulesToDatabase();
+
+            // 刷新并自动恢复焦点
             InitializeRoleManagement();
+
             XtraMessageBox.Show("权限模块刷新成功！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
