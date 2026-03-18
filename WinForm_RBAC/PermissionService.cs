@@ -33,6 +33,7 @@ namespace WinForm_RBAC
             }
             return dt;
         }
+
         public DataTable GetAllPermissions()
         {
             var dt = new DataTable();
@@ -107,6 +108,70 @@ namespace WinForm_RBAC
             }
         }
 
+        /// <summary>
+        /// 获取包含角色名称的用户详细列表
+        /// </summary>
+        public DataTable GetUserDetailList()
+        {
+            var dt = new DataTable();
+            const string sql = @"
+        SELECT [Users].[UserName]       AS '用户名',
+               [Roles].[RoleName]       AS '角色名',
+               [Users].[Enable]         AS '开启状态',
+               [Users].[UserID], 
+               [UserRoles].[UserID]     AS 'UserRoles_UserID',
+               [UserRoles].[RoleID],
+               [Roles].[RoleID]         AS 'Roles_RoleID',
+               [Users].[PasswordHash]   AS '密码'
+        FROM [dbo].[Users]     AS [Users]
+        INNER JOIN [dbo].[UserRoles] AS [UserRoles] ON [UserRoles].[UserID] = [Users].[UserID]
+        INNER JOIN [dbo].[Roles]     AS [Roles]     ON [Roles].[RoleID]      = [UserRoles].[RoleID]";
+
+            using (var conn = new System.Data.SqlClient.SqlConnection(_connectionString))
+            {
+                using (var da = new System.Data.SqlClient.SqlDataAdapter(sql, conn))
+                {
+                    // 注意：这里不需要显式 Open，DataAdapter 会自动处理
+                    da.Fill(dt);
+                }
+            }
+            return dt;
+        }
+
+        /// <summary>
+        /// 获取属于指定角色的所有用户名
+        /// </summary>
+        public List<string> GetUserNamesByRole(int roleId)
+        {
+            var userNames = new List<string>();
+            const string sql = @"
+        SELECT u.UserName 
+        FROM Users u
+        JOIN UserRoles ur ON u.UserID = ur.UserID
+        WHERE ur.RoleID = @RID";
+
+            try
+            {
+                using (var conn = new SqlConnection(_connectionString))
+                {
+                    conn.Open();
+                    using (var cmd = new SqlCommand(sql, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@RID", roleId);
+                        using (var reader = cmd.ExecuteReader())
+                        {
+                            while (reader.Read())
+                            {
+                                userNames.Add(reader["UserName"].ToString());
+                            }
+                        }
+                    }
+                }
+            }
+            catch { /* 记录日志 */ }
+            return userNames;
+        }
+
         // ================= 业务逻辑层 (BLL) =================
 
         // 1. 处理节点状态联动 (保持不变)
@@ -147,6 +212,383 @@ namespace WinForm_RBAC
             foreach (TreeListNode node in treeList.Nodes)
             {
                 CheckNodeRecursive(node, rolePermissionCodes);
+            }
+        }
+
+        //编辑用户密码和角色方法
+        public bool UpdateUser(int userId, string userName, string password, int roleId)
+        {
+            using (var conn = new SqlConnection(_connectionString))
+            {
+                conn.Open();
+                using (var trans = conn.BeginTransaction())
+                {
+                    try
+                    {
+                        // 1. 处理密码加密
+                        string pwdHash = "";
+                        if (!string.IsNullOrEmpty(password))
+                        {
+                            // 调用你的加密类进行转换，确保与登录时的加密方式一致
+                            pwdHash = PasswordHasher.HashPassword(password);
+                        }
+
+                        // 2. 更新 Users 表
+                        string userSql = "UPDATE Users SET UserName = @Name";
+                        if (!string.IsNullOrEmpty(pwdHash)) userSql += ", PasswordHash = @Pwd";
+                        userSql += " WHERE UserID = @UID";
+
+                        using (var cmd = new SqlCommand(userSql, conn, trans))
+                        {
+                            cmd.Parameters.AddWithValue("@Name", userName);
+                            cmd.Parameters.AddWithValue("@UID", userId);
+                            if (!string.IsNullOrEmpty(pwdHash)) cmd.Parameters.AddWithValue("@Pwd", pwdHash);
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        // 3. 更新角色关联 (UserRoles 表)
+                        string roleSql = "UPDATE UserRoles SET RoleID = @RID WHERE UserID = @UID";
+                        using (var cmd = new SqlCommand(roleSql, conn, trans))
+                        {
+                            cmd.Parameters.AddWithValue("@RID", roleId);
+                            cmd.Parameters.AddWithValue("@UID", userId);
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        trans.Commit();
+                        return true;
+                    }
+                    catch
+                    {
+                        trans.Rollback();
+                        return false;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 新增用户及其角色关联
+        /// </summary>
+        public bool AddUser(string userName, string password, int roleId)
+        {
+            using (var conn = new SqlConnection(_connectionString))
+            {
+                conn.Open();
+                using (var trans = conn.BeginTransaction())
+                {
+                    try
+                    {
+                        // 1. 插入 Users 表并获取生成的 UserID
+                        const string userSql = @"
+                    INSERT INTO Users (UserName, PasswordHash, Enable) 
+                    VALUES (@Name, @Pwd, 1);
+                    SELECT SCOPE_IDENTITY();"; // 获取刚插入的自增 ID
+
+                        int newUserId;
+                        using (var cmd = new SqlCommand(userSql, conn, trans))
+                        {
+                            cmd.Parameters.AddWithValue("@Name", userName);
+                            cmd.Parameters.AddWithValue("@Pwd", PasswordHasher.HashPassword(password));
+                            newUserId = Convert.ToInt32(cmd.ExecuteScalar());
+                        }
+
+                        // 2. 插入 UserRoles 关联表
+                        const string roleSql = "INSERT INTO UserRoles (UserID, RoleID) VALUES (@UID, @RID)";
+                        using (var cmd = new SqlCommand(roleSql, conn, trans))
+                        {
+                            cmd.Parameters.AddWithValue("@UID", newUserId);
+                            cmd.Parameters.AddWithValue("@RID", roleId);
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        trans.Commit();
+                        return true;
+                    }
+                    catch
+                    {
+                        trans.Rollback();
+                        return false;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// 禁用指定用户
+        /// </summary>
+        /// <param name="userId">用户ID</param>
+        /// <returns>是否成功</returns>
+        public bool DisableUser(int userId)
+        {
+            // 这里使用简单的 SQL 更新
+            const string sql = "UPDATE Users SET Enable = 0 WHERE UserID = @UID";
+
+            try
+            {
+                using (var conn = new SqlConnection(_connectionString))
+                {
+                    conn.Open();
+                    using (var cmd = new SqlCommand(sql, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@UID", userId);
+                        int rows = cmd.ExecuteNonQuery();
+                        return rows > 0;
+                    }
+                }
+            }
+            catch 
+            {
+                // 实际开发中建议在此处记录日志
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 启用用户 (恢复登录权限)
+        /// </summary>
+        /// <param name="userId">用户ID</param>
+        /// <returns>是否成功</returns>
+        public bool EnableUser(int userId)
+        {
+            // 将 Enable 设为 1，对应 Login_Form 中的验证条件
+            const string sql = "UPDATE Users SET Enable = 1 WHERE UserID = @UID";
+
+            try
+            {
+                using (var conn = new SqlConnection(_connectionString))
+                {
+                    conn.Open();
+                    using (var cmd = new SqlCommand(sql, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@UID", userId);
+                        int rows = cmd.ExecuteNonQuery();
+                        return rows > 0;
+                    }
+                }
+            }
+            catch
+            {
+                // 此处可记录日志
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 物理删除用户及其所有角色关联
+        /// </summary>
+        public bool DeleteUser(int userId)
+        {
+            using (var conn = new SqlConnection(_connectionString))
+            {
+                conn.Open();
+                using (var trans = conn.BeginTransaction())
+                {
+                    try
+                    {
+                        // 1. 先删除角色关联表中的数据 (外键表)
+                        const string sqlRoles = "DELETE FROM UserRoles WHERE UserID = @UID";
+                        using (var cmd = new SqlCommand(sqlRoles, conn, trans))
+                        {
+                            cmd.Parameters.AddWithValue("@UID", userId);
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        // 2. 再删除用户表中的数据 (主表)
+                        const string sqlUser = "DELETE FROM Users WHERE UserID = @UID";
+                        using (var cmd = new SqlCommand(sqlUser, conn, trans))
+                        {
+                            cmd.Parameters.AddWithValue("@UID", userId);
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        // 只有两步都成功，才真正提交到数据库
+                        trans.Commit();
+                        return true;
+                    }
+                    catch
+                    {
+                        // 如果任何一步报错，立刻撤销刚才的删除动作
+                        trans.Rollback();
+                        return false;
+                    }
+                }
+            }
+        }
+
+        public bool UpdateUserEnableStatus(int userId, bool isEnabled)
+        {
+            const string sql = "UPDATE [dbo].[Users] SET [Enable] = @enable WHERE [UserID] = @id";
+            using (var conn = new System.Data.SqlClient.SqlConnection(_connectionString))
+            {
+                using (var cmd = new System.Data.SqlClient.SqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@enable", isEnabled);
+                    cmd.Parameters.AddWithValue("@id", userId);
+                    conn.Open();
+                    return cmd.ExecuteNonQuery() > 0;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 直接修改指定用户的密码
+        /// </summary>
+        public bool UpdateUserPasswordDirectly(int userId, string newPwd)
+        {
+            // 将明文密码加密为哈希
+            string passwordHash = PasswordHasher.HashPassword(newPwd);
+
+            const string sql = "UPDATE Users SET PasswordHash = @Pwd WHERE UserID = @UID";
+
+            try
+            {
+                using (var conn = new SqlConnection(_connectionString))
+                {
+                    conn.Open();
+                    using (var cmd = new SqlCommand(sql, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@Pwd", passwordHash);
+                        cmd.Parameters.AddWithValue("@UID", userId);
+
+                        return cmd.ExecuteNonQuery() > 0;
+                    }
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 新增角色
+        /// </summary>
+        /// <param name="roleName">角色名称</param>
+        /// <returns>是否成功</returns>
+        public bool AddRole(string roleName)
+        {
+            // 1. 先检查重名，防止数据库报错
+            const string checkSql = "SELECT COUNT(1) FROM Roles WHERE RoleName = @Name";
+            const string insertSql = "INSERT INTO Roles (RoleName) VALUES (@Name)";
+
+            try
+            {
+                using (var conn = new SqlConnection(_connectionString))
+                {
+                    conn.Open();
+
+                    // 检查重复
+                    using (var cmdCheck = new SqlCommand(checkSql, conn))
+                    {
+                        cmdCheck.Parameters.AddWithValue("@Name", roleName);
+                        int count = Convert.ToInt32(cmdCheck.ExecuteScalar());
+                        if (count > 0) return false; // 名称已存在
+                    }
+
+                    // 执行插入
+                    using (var cmdInsert = new SqlCommand(insertSql, conn))
+                    {
+                        cmdInsert.Parameters.AddWithValue("@Name", roleName);
+                        return cmdInsert.ExecuteNonQuery() > 0;
+                    }
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 修改角色名称
+        /// </summary>
+        /// <param name="roleId">角色ID</param>
+        /// <param name="newRoleName">新名称</param>
+        /// <returns>是否成功</returns>
+        public bool UpdateRoleName(int roleId, string newRoleName)
+        {
+            // 1. 检查新名称是否已被其他角色占用
+            const string checkSql = "SELECT COUNT(1) FROM Roles WHERE RoleName = @Name AND RoleID != @RID";
+            const string updateSql = "UPDATE Roles SET RoleName = @Name WHERE RoleID = @RID";
+
+            try
+            {
+                using (var conn = new SqlConnection(_connectionString))
+                {
+                    conn.Open();
+
+                    // 检查重名
+                    using (var cmdCheck = new SqlCommand(checkSql, conn))
+                    {
+                        cmdCheck.Parameters.AddWithValue("@Name", newRoleName);
+                        cmdCheck.Parameters.AddWithValue("@RID", roleId);
+                        if (Convert.ToInt32(cmdCheck.ExecuteScalar()) > 0) return false;
+                    }
+
+                    // 执行更新
+                    using (var cmdUpdate = new SqlCommand(updateSql, conn))
+                    {
+                        cmdUpdate.Parameters.AddWithValue("@Name", newRoleName);
+                        cmdUpdate.Parameters.AddWithValue("@RID", roleId);
+                        return cmdUpdate.ExecuteNonQuery() > 0;
+                    }
+                }
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 删除角色
+        /// </summary>
+        /// <returns>0:成功, 1:有用户引用, -1:失败</returns>
+        public int DeleteRole(int roleId)
+        {
+            using (var conn = new SqlConnection(_connectionString))
+            {
+                conn.Open();
+
+                // 1. 检查是否有用户关联（防止误删导致用户丢失角色）
+                const string checkUserSql = "SELECT COUNT(1) FROM UserRoles WHERE RoleID = @RID";
+                using (var cmdCheck = new SqlCommand(checkUserSql, conn))
+                {
+                    cmdCheck.Parameters.AddWithValue("@RID", roleId);
+                    if (Convert.ToInt32(cmdCheck.ExecuteScalar()) > 0) return 1;
+                }
+
+                // 2. 使用事务删除权限关联和角色本身
+                using (var trans = conn.BeginTransaction())
+                {
+                    try
+                    {
+                        // 先删权限关联（子表）
+                        const string delPermSql = "DELETE FROM RolePermissions WHERE RoleID = @RID";
+                        using (var cmd = new SqlCommand(delPermSql, conn, trans))
+                        {
+                            cmd.Parameters.AddWithValue("@RID", roleId);
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        // 再删角色本身（主表）
+                        const string delRoleSql = "DELETE FROM Roles WHERE RoleID = @RID";
+                        using (var cmd = new SqlCommand(delRoleSql, conn, trans))
+                        {
+                            cmd.Parameters.AddWithValue("@RID", roleId);
+                            cmd.ExecuteNonQuery();
+                        }
+
+                        trans.Commit();
+                        return 0;
+                    }
+                    catch
+                    {
+                        trans.Rollback();
+                        return -1;
+                    }
+                }
             }
         }
 
@@ -216,438 +658,6 @@ namespace WinForm_RBAC
             foreach (TreeListNode childNode in node.Nodes)
             {
                 CheckNodeRecursive(childNode, rolePermissionCodes);
-            }
-        }
-
-        //编辑用户密码和角色方法
-        public bool UpdateUser(int userId, string userName, string password, int roleId)
-        {
-            using (var conn = new SqlConnection(_connectionString))
-            {
-                conn.Open();
-                using (var trans = conn.BeginTransaction())
-                {
-                    try
-                    {
-                        // 1. 处理密码加密
-                        string pwdHash = "";
-                        if (!string.IsNullOrEmpty(password))
-                        {
-                            // 调用你的加密类进行转换，确保与登录时的加密方式一致
-                            pwdHash = PasswordHasher.HashPassword(password);
-                        }
-
-                        // 2. 更新 Users 表
-                        string userSql = "UPDATE Users SET UserName = @Name";
-                        if (!string.IsNullOrEmpty(pwdHash)) userSql += ", PasswordHash = @Pwd";
-                        userSql += " WHERE UserID = @UID";
-
-                        using (var cmd = new SqlCommand(userSql, conn, trans))
-                        {
-                            cmd.Parameters.AddWithValue("@Name", userName);
-                            cmd.Parameters.AddWithValue("@UID", userId);
-                            if (!string.IsNullOrEmpty(pwdHash)) cmd.Parameters.AddWithValue("@Pwd", pwdHash);
-                            cmd.ExecuteNonQuery();
-                        }
-
-                        // 3. 更新角色关联 (UserRoles 表)
-                        string roleSql = "UPDATE UserRoles SET RoleID = @RID WHERE UserID = @UID";
-                        using (var cmd = new SqlCommand(roleSql, conn, trans))
-                        {
-                            cmd.Parameters.AddWithValue("@RID", roleId);
-                            cmd.Parameters.AddWithValue("@UID", userId);
-                            cmd.ExecuteNonQuery();
-                        }
-
-                        trans.Commit();
-                        return true;
-                    }
-                    catch
-                    {
-                        trans.Rollback();
-                        return false;
-                    }
-                }
-            }
-        }
-        /// <summary>
-        /// 禁用指定用户
-        /// </summary>
-        /// <param name="userId">用户ID</param>
-        /// <returns>是否成功</returns>
-        public bool DisableUser(int userId)
-        {
-            // 这里使用简单的 SQL 更新
-            const string sql = "UPDATE Users SET Enable = 0 WHERE UserID = @UID";
-
-            try
-            {
-                using (var conn = new SqlConnection(_connectionString))
-                {
-                    conn.Open();
-                    using (var cmd = new SqlCommand(sql, conn))
-                    {
-                        cmd.Parameters.AddWithValue("@UID", userId);
-                        int rows = cmd.ExecuteNonQuery();
-                        return rows > 0;
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                // 实际开发中建议在此处记录日志
-                return false;
-            }
-        }
-        /// <summary>
-        /// 启用用户 (恢复登录权限)
-        /// </summary>
-        /// <param name="userId">用户ID</param>
-        /// <returns>是否成功</returns>
-        public bool EnableUser(int userId)
-        {
-            // 将 Enable 设为 1，对应 Login_Form 中的验证条件
-            const string sql = "UPDATE Users SET Enable = 1 WHERE UserID = @UID";
-
-            try
-            {
-                using (var conn = new SqlConnection(_connectionString))
-                {
-                    conn.Open();
-                    using (var cmd = new SqlCommand(sql, conn))
-                    {
-                        cmd.Parameters.AddWithValue("@UID", userId);
-                        int rows = cmd.ExecuteNonQuery();
-                        return rows > 0;
-                    }
-                }
-            }
-            catch
-            {
-                // 此处可记录日志
-                return false;
-            }
-        }
-        /// <summary>
-        /// 物理删除用户及其所有角色关联
-        /// </summary>
-        public bool DeleteUser(int userId)
-        {
-            using (var conn = new SqlConnection(_connectionString))
-            {
-                conn.Open();
-                using (var trans = conn.BeginTransaction())
-                {
-                    try
-                    {
-                        // 1. 先删除角色关联表中的数据 (外键表)
-                        const string sqlRoles = "DELETE FROM UserRoles WHERE UserID = @UID";
-                        using (var cmd = new SqlCommand(sqlRoles, conn, trans))
-                        {
-                            cmd.Parameters.AddWithValue("@UID", userId);
-                            cmd.ExecuteNonQuery();
-                        }
-
-                        // 2. 再删除用户表中的数据 (主表)
-                        const string sqlUser = "DELETE FROM Users WHERE UserID = @UID";
-                        using (var cmd = new SqlCommand(sqlUser, conn, trans))
-                        {
-                            cmd.Parameters.AddWithValue("@UID", userId);
-                            cmd.ExecuteNonQuery();
-                        }
-
-                        // 只有两步都成功，才真正提交到数据库
-                        trans.Commit();
-                        return true;
-                    }
-                    catch
-                    {
-                        // 如果任何一步报错，立刻撤销刚才的删除动作
-                        trans.Rollback();
-                        return false;
-                    }
-                }
-            }
-        }
-        /// <summary>
-        /// 新增用户及其角色关联
-        /// </summary>
-        public bool AddUser(string userName, string password, int roleId)
-        {
-            using (var conn = new SqlConnection(_connectionString))
-            {
-                conn.Open();
-                using (var trans = conn.BeginTransaction())
-                {
-                    try
-                    {
-                        // 1. 插入 Users 表并获取生成的 UserID
-                        const string userSql = @"
-                    INSERT INTO Users (UserName, PasswordHash, Enable) 
-                    VALUES (@Name, @Pwd, 1);
-                    SELECT SCOPE_IDENTITY();"; // 获取刚插入的自增 ID
-
-                        int newUserId;
-                        using (var cmd = new SqlCommand(userSql, conn, trans))
-                        {
-                            cmd.Parameters.AddWithValue("@Name", userName);
-                            cmd.Parameters.AddWithValue("@Pwd", PasswordHasher.HashPassword(password));
-                            newUserId = Convert.ToInt32(cmd.ExecuteScalar());
-                        }
-
-                        // 2. 插入 UserRoles 关联表
-                        const string roleSql = "INSERT INTO UserRoles (UserID, RoleID) VALUES (@UID, @RID)";
-                        using (var cmd = new SqlCommand(roleSql, conn, trans))
-                        {
-                            cmd.Parameters.AddWithValue("@UID", newUserId);
-                            cmd.Parameters.AddWithValue("@RID", roleId);
-                            cmd.ExecuteNonQuery();
-                        }
-
-                        trans.Commit();
-                        return true;
-                    }
-                    catch
-                    {
-                        trans.Rollback();
-                        return false;
-                    }
-                }
-            }
-        }
-        /// <summary>
-        /// 新增角色
-        /// </summary>
-        /// <param name="roleName">角色名称</param>
-        /// <returns>是否成功</returns>
-        public bool AddRole(string roleName)
-        {
-            // 1. 先检查重名，防止数据库报错
-            const string checkSql = "SELECT COUNT(1) FROM Roles WHERE RoleName = @Name";
-            const string insertSql = "INSERT INTO Roles (RoleName) VALUES (@Name)";
-
-            try
-            {
-                using (var conn = new SqlConnection(_connectionString))
-                {
-                    conn.Open();
-
-                    // 检查重复
-                    using (var cmdCheck = new SqlCommand(checkSql, conn))
-                    {
-                        cmdCheck.Parameters.AddWithValue("@Name", roleName);
-                        int count = Convert.ToInt32(cmdCheck.ExecuteScalar());
-                        if (count > 0) return false; // 名称已存在
-                    }
-
-                    // 执行插入
-                    using (var cmdInsert = new SqlCommand(insertSql, conn))
-                    {
-                        cmdInsert.Parameters.AddWithValue("@Name", roleName);
-                        return cmdInsert.ExecuteNonQuery() > 0;
-                    }
-                }
-            }
-            catch
-            {
-                return false;
-            }
-        }
-        /// <summary>
-        /// 删除角色
-        /// </summary>
-        /// <returns>0:成功, 1:有用户引用, -1:失败</returns>
-        public int DeleteRole(int roleId)
-        {
-            using (var conn = new SqlConnection(_connectionString))
-            {
-                conn.Open();
-
-                // 1. 检查是否有用户关联（防止误删导致用户丢失角色）
-                const string checkUserSql = "SELECT COUNT(1) FROM UserRoles WHERE RoleID = @RID";
-                using (var cmdCheck = new SqlCommand(checkUserSql, conn))
-                {
-                    cmdCheck.Parameters.AddWithValue("@RID", roleId);
-                    if (Convert.ToInt32(cmdCheck.ExecuteScalar()) > 0) return 1;
-                }
-
-                // 2. 使用事务删除权限关联和角色本身
-                using (var trans = conn.BeginTransaction())
-                {
-                    try
-                    {
-                        // 先删权限关联（子表）
-                        const string delPermSql = "DELETE FROM RolePermissions WHERE RoleID = @RID";
-                        using (var cmd = new SqlCommand(delPermSql, conn, trans))
-                        {
-                            cmd.Parameters.AddWithValue("@RID", roleId);
-                            cmd.ExecuteNonQuery();
-                        }
-
-                        // 再删角色本身（主表）
-                        const string delRoleSql = "DELETE FROM Roles WHERE RoleID = @RID";
-                        using (var cmd = new SqlCommand(delRoleSql, conn, trans))
-                        {
-                            cmd.Parameters.AddWithValue("@RID", roleId);
-                            cmd.ExecuteNonQuery();
-                        }
-
-                        trans.Commit();
-                        return 0;
-                    }
-                    catch
-                    {
-                        trans.Rollback();
-                        return -1;
-                    }
-                }
-            }
-        }
-        /// <summary>
-        /// 修改角色名称
-        /// </summary>
-        /// <param name="roleId">角色ID</param>
-        /// <param name="newRoleName">新名称</param>
-        /// <returns>是否成功</returns>
-        public bool UpdateRoleName(int roleId, string newRoleName)
-        {
-            // 1. 检查新名称是否已被其他角色占用
-            const string checkSql = "SELECT COUNT(1) FROM Roles WHERE RoleName = @Name AND RoleID != @RID";
-            const string updateSql = "UPDATE Roles SET RoleName = @Name WHERE RoleID = @RID";
-
-            try
-            {
-                using (var conn = new SqlConnection(_connectionString))
-                {
-                    conn.Open();
-
-                    // 检查重名
-                    using (var cmdCheck = new SqlCommand(checkSql, conn))
-                    {
-                        cmdCheck.Parameters.AddWithValue("@Name", newRoleName);
-                        cmdCheck.Parameters.AddWithValue("@RID", roleId);
-                        if (Convert.ToInt32(cmdCheck.ExecuteScalar()) > 0) return false;
-                    }
-
-                    // 执行更新
-                    using (var cmdUpdate = new SqlCommand(updateSql, conn))
-                    {
-                        cmdUpdate.Parameters.AddWithValue("@Name", newRoleName);
-                        cmdUpdate.Parameters.AddWithValue("@RID", roleId);
-                        return cmdUpdate.ExecuteNonQuery() > 0;
-                    }
-                }
-            }
-            catch
-            {
-                return false;
-            }
-        }
-        /// <summary>
-        /// 获取属于指定角色的所有用户名
-        /// </summary>
-        public List<string> GetUserNamesByRole(int roleId)
-        {
-            var userNames = new List<string>();
-            const string sql = @"
-        SELECT u.UserName 
-        FROM Users u
-        JOIN UserRoles ur ON u.UserID = ur.UserID
-        WHERE ur.RoleID = @RID";
-
-            try
-            {
-                using (var conn = new SqlConnection(_connectionString))
-                {
-                    conn.Open();
-                    using (var cmd = new SqlCommand(sql, conn))
-                    {
-                        cmd.Parameters.AddWithValue("@RID", roleId);
-                        using (var reader = cmd.ExecuteReader())
-                        {
-                            while (reader.Read())
-                            {
-                                userNames.Add(reader["UserName"].ToString());
-                            }
-                        }
-                    }
-                }
-            }
-            catch { /* 记录日志 */ }
-            return userNames;
-        }
-        /// <summary>
-        /// 直接修改指定用户的密码
-        /// </summary>
-        public bool UpdateUserPasswordDirectly(int userId, string newPwd)
-        {
-            // 将明文密码加密为哈希
-            string passwordHash = PasswordHasher.HashPassword(newPwd);
-
-            const string sql = "UPDATE Users SET PasswordHash = @Pwd WHERE UserID = @UID";
-
-            try
-            {
-                using (var conn = new SqlConnection(_connectionString))
-                {
-                    conn.Open();
-                    using (var cmd = new SqlCommand(sql, conn))
-                    {
-                        cmd.Parameters.AddWithValue("@Pwd", passwordHash);
-                        cmd.Parameters.AddWithValue("@UID", userId);
-
-                        return cmd.ExecuteNonQuery() > 0;
-                    }
-                }
-            }
-            catch
-            {
-                return false;
-            }
-        }
-        // PermissionService.cs 内部
-
-        /// <summary>
-        /// 获取包含角色名称的用户详细列表
-        /// </summary>
-        public DataTable GetUserDetailList()
-        {
-            var dt = new DataTable();
-            const string sql = @"
-        SELECT [Users].[UserName]       AS '用户名',
-               [Roles].[RoleName]       AS '角色名',
-               [Users].[Enable]         AS '开启状态',
-               [Users].[UserID], 
-               [UserRoles].[UserID]     AS 'UserRoles_UserID',
-               [UserRoles].[RoleID],
-               [Roles].[RoleID]         AS 'Roles_RoleID',
-               [Users].[PasswordHash]   AS '密码'
-        FROM [dbo].[Users]     AS [Users]
-        INNER JOIN [dbo].[UserRoles] AS [UserRoles] ON [UserRoles].[UserID] = [Users].[UserID]
-        INNER JOIN [dbo].[Roles]     AS [Roles]     ON [Roles].[RoleID]      = [UserRoles].[RoleID]";
-
-            using (var conn = new System.Data.SqlClient.SqlConnection(_connectionString))
-            {
-                using (var da = new System.Data.SqlClient.SqlDataAdapter(sql, conn))
-                {
-                    // 注意：这里不需要显式 Open，DataAdapter 会自动处理
-                    da.Fill(dt);
-                }
-            }
-            return dt;
-        }
-        public bool UpdateUserEnableStatus(int userId, bool isEnabled)
-        {
-            const string sql = "UPDATE [dbo].[Users] SET [Enable] = @enable WHERE [UserID] = @id";
-            using (var conn = new System.Data.SqlClient.SqlConnection(_connectionString))
-            {
-                using (var cmd = new System.Data.SqlClient.SqlCommand(sql, conn))
-                {
-                    cmd.Parameters.AddWithValue("@enable", isEnabled);
-                    cmd.Parameters.AddWithValue("@id", userId);
-                    conn.Open();
-                    return cmd.ExecuteNonQuery() > 0;
-                }
             }
         }
     }
