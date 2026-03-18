@@ -45,7 +45,7 @@ namespace WinForm_RBAC
 
             // 初始化基础数据
             this._userId = userId;
-            this._connectionString = ConfigurationManager.ConnectionStrings["DataBase_Noke_system"].ConnectionString;
+            this._connectionString = ConfigurationManager.ConnectionStrings["WinForm_RBAC"].ConnectionString;
 
             // 1. 配置 LookUpEdit 数据源
             lkeRole.Properties.DataSource = dtRoles;

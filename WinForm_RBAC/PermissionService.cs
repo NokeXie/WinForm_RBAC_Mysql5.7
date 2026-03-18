@@ -6,6 +6,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Linq; // 引入 Linq 以便更简洁地操作集合
 using System.Windows.Forms;
+using MySql.Data.MySqlClient;
 
 namespace WinForm_RBAC
 {
@@ -23,10 +24,10 @@ namespace WinForm_RBAC
         public DataTable GetAllRoles()
         {
             var dt = new DataTable();
-            using (var conn = new SqlConnection(_connectionString))
+            using (var conn = new MySqlConnection(_connectionString))
             {
                 const string sql = "SELECT RoleID, RoleName FROM Roles";
-                using (var da = new SqlDataAdapter(sql, conn))
+                using (var da = new MySqlDataAdapter(sql, conn))
                 {
                     da.Fill(dt);
                 }
@@ -37,10 +38,10 @@ namespace WinForm_RBAC
         public DataTable GetAllPermissions()
         {
             var dt = new DataTable();
-            using (var conn = new SqlConnection(_connectionString))
+            using (var conn = new MySqlConnection(_connectionString))
             {
                 const string sql = "SELECT PermissionCode, ParentCode, Description FROM Permissions";
-                using (var da = new SqlDataAdapter(sql, conn))
+                using (var da = new MySqlDataAdapter(sql, conn))
                 {
                     da.Fill(dt);
                 }
@@ -52,10 +53,10 @@ namespace WinForm_RBAC
         {
             var codes = new List<string>();
             const string sql = "SELECT PermissionCode FROM RolePermissions WHERE RoleID = @RoleID";
-            using (var conn = new SqlConnection(_connectionString))
-            using (var cmd = new SqlCommand(sql, conn))
+            using (var conn = new MySqlConnection(_connectionString))
+            using (var cmd = new MySqlCommand(sql, conn))
             {
-                cmd.Parameters.Add("@RoleID", SqlDbType.Int).Value = roleId;
+                cmd.Parameters.Add("@RoleID", MySqlDbType.VarChar).Value = roleId;
                 conn.Open();
                 using (var reader = cmd.ExecuteReader())
                 {
@@ -70,7 +71,7 @@ namespace WinForm_RBAC
 
         public void SaveRolePermissions(int roleId, List<string> permissionCodes)
         {
-            using (var conn = new SqlConnection(_connectionString))
+            using (var conn = new MySqlConnection(_connectionString))
             {
                 conn.Open();
                 using (var transaction = conn.BeginTransaction())
@@ -78,17 +79,17 @@ namespace WinForm_RBAC
                     try
                     {
                         const string delSql = "DELETE FROM RolePermissions WHERE RoleID = @RoleID";
-                        using (var delCmd = new SqlCommand(delSql, conn, transaction))
+                        using (var delCmd = new MySqlCommand(delSql, conn, transaction))
                         {
-                            delCmd.Parameters.Add("@RoleID", SqlDbType.Int).Value = roleId;
+                            delCmd.Parameters.Add("@RoleID", MySql.Data.MySqlClient.MySqlDbType.Int32).Value = roleId;
                             delCmd.ExecuteNonQuery();
                         }
 
                         const string insSql = "INSERT INTO RolePermissions(RoleID, PermissionCode) VALUES(@RoleID, @PermissionCode)";
-                        using (var insCmd = new SqlCommand(insSql, conn, transaction))
+                        using (var insCmd = new MySqlCommand(insSql, conn, transaction))
                         {
-                            insCmd.Parameters.Add("@RoleID", SqlDbType.Int);
-                            insCmd.Parameters.Add("@PermissionCode", SqlDbType.VarChar, 50);
+                            insCmd.Parameters.Add("@RoleID", MySql.Data.MySqlClient.MySqlDbType.Int32);
+                            insCmd.Parameters.Add("@PermissionCode", MySqlDbType.VarChar, 50);
 
                             foreach (var code in permissionCodes)
                             {
@@ -115,25 +116,23 @@ namespace WinForm_RBAC
         {
             var dt = new DataTable();
             const string sql = @"
-        SELECT [Users].[UserName]       AS '用户名',
-               [Roles].[RoleName]       AS '角色名',
-               [Users].[Enable]         AS '开启状态',
-               [Users].[UserID], 
-               [UserRoles].[UserID]     AS 'UserRoles_UserID',
-               [UserRoles].[RoleID],
-               [Roles].[RoleID]         AS 'Roles_RoleID',
-               [Users].[PasswordHash]   AS '密码'
-        FROM [dbo].[Users]     AS [Users]
-        INNER JOIN [dbo].[UserRoles] AS [UserRoles] ON [UserRoles].[UserID] = [Users].[UserID]
-        INNER JOIN [dbo].[Roles]     AS [Roles]     ON [Roles].[RoleID]      = [UserRoles].[RoleID]";
+        SELECT Users.UserName     AS '用户名',
+               Roles.RoleName     AS '角色名',
+               Users.Enable       AS '开启状态',
+               Users.UserID, 
+               UserRoles.UserID   AS UserRoles_UserID,
+               UserRoles.RoleID,
+               Roles.RoleID       AS Roles_RoleID,
+               Users.PasswordHash AS '密码'
+        FROM Users
+        INNER JOIN UserRoles ON UserRoles.UserID = Users.UserID
+        INNER JOIN Roles     ON Roles.RoleID     = UserRoles.RoleID";
 
-            using (var conn = new System.Data.SqlClient.SqlConnection(_connectionString))
+            using (var conn = new MySqlConnection(_connectionString))
+            
+            using (var da = new MySqlDataAdapter(sql, conn))
             {
-                using (var da = new System.Data.SqlClient.SqlDataAdapter(sql, conn))
-                {
-                    // 注意：这里不需要显式 Open，DataAdapter 会自动处理
-                    da.Fill(dt);
-                }
+                da.Fill(dt);
             }
             return dt;
         }
@@ -152,10 +151,10 @@ namespace WinForm_RBAC
 
             try
             {
-                using (var conn = new SqlConnection(_connectionString))
+                using (var conn = new MySqlConnection(_connectionString))
                 {
                     conn.Open();
-                    using (var cmd = new SqlCommand(sql, conn))
+                    using (var cmd = new MySqlCommand(sql, conn))
                     {
                         cmd.Parameters.AddWithValue("@RID", roleId);
                         using (var reader = cmd.ExecuteReader())
@@ -218,7 +217,7 @@ namespace WinForm_RBAC
         //编辑用户密码和角色方法
         public bool UpdateUser(int userId, string userName, string password, int roleId)
         {
-            using (var conn = new SqlConnection(_connectionString))
+            using (var conn = new MySqlConnection(_connectionString))
             {
                 conn.Open();
                 using (var trans = conn.BeginTransaction())
@@ -238,7 +237,7 @@ namespace WinForm_RBAC
                         if (!string.IsNullOrEmpty(pwdHash)) userSql += ", PasswordHash = @Pwd";
                         userSql += " WHERE UserID = @UID";
 
-                        using (var cmd = new SqlCommand(userSql, conn, trans))
+                        using (var cmd = new MySqlCommand(userSql, conn, trans))
                         {
                             cmd.Parameters.AddWithValue("@Name", userName);
                             cmd.Parameters.AddWithValue("@UID", userId);
@@ -248,7 +247,7 @@ namespace WinForm_RBAC
 
                         // 3. 更新角色关联 (UserRoles 表)
                         string roleSql = "UPDATE UserRoles SET RoleID = @RID WHERE UserID = @UID";
-                        using (var cmd = new SqlCommand(roleSql, conn, trans))
+                        using (var cmd = new MySqlCommand(roleSql, conn, trans))
                         {
                             cmd.Parameters.AddWithValue("@RID", roleId);
                             cmd.Parameters.AddWithValue("@UID", userId);
@@ -272,7 +271,7 @@ namespace WinForm_RBAC
         /// </summary>
         public bool AddUser(string userName, string password, int roleId)
         {
-            using (var conn = new SqlConnection(_connectionString))
+            using (var conn = new MySqlConnection(_connectionString))
             {
                 conn.Open();
                 using (var trans = conn.BeginTransaction())
@@ -281,12 +280,12 @@ namespace WinForm_RBAC
                     {
                         // 1. 插入 Users 表并获取生成的 UserID
                         const string userSql = @"
-                    INSERT INTO Users (UserName, PasswordHash, Enable) 
-                    VALUES (@Name, @Pwd, 1);
-                    SELECT SCOPE_IDENTITY();"; // 获取刚插入的自增 ID
+                        INSERT INTO Users (UserName, PasswordHash, Enable) 
+                        VALUES (@Name, @Pwd, 1);
+                        SELECT LAST_INSERT_ID();"; // 获取刚插入的自增 ID
 
                         int newUserId;
-                        using (var cmd = new SqlCommand(userSql, conn, trans))
+                        using (var cmd = new MySqlCommand(userSql, conn, trans))
                         {
                             cmd.Parameters.AddWithValue("@Name", userName);
                             cmd.Parameters.AddWithValue("@Pwd", PasswordHasher.HashPassword(password));
@@ -295,7 +294,7 @@ namespace WinForm_RBAC
 
                         // 2. 插入 UserRoles 关联表
                         const string roleSql = "INSERT INTO UserRoles (UserID, RoleID) VALUES (@UID, @RID)";
-                        using (var cmd = new SqlCommand(roleSql, conn, trans))
+                        using (var cmd = new MySqlCommand(roleSql, conn, trans))
                         {
                             cmd.Parameters.AddWithValue("@UID", newUserId);
                             cmd.Parameters.AddWithValue("@RID", roleId);
@@ -326,10 +325,10 @@ namespace WinForm_RBAC
 
             try
             {
-                using (var conn = new SqlConnection(_connectionString))
+                using (var conn = new MySqlConnection(_connectionString))
                 {
                     conn.Open();
-                    using (var cmd = new SqlCommand(sql, conn))
+                    using (var cmd = new MySqlCommand(sql, conn))
                     {
                         cmd.Parameters.AddWithValue("@UID", userId);
                         int rows = cmd.ExecuteNonQuery();
@@ -356,10 +355,10 @@ namespace WinForm_RBAC
 
             try
             {
-                using (var conn = new SqlConnection(_connectionString))
+                using (var conn = new MySqlConnection(_connectionString))
                 {
                     conn.Open();
-                    using (var cmd = new SqlCommand(sql, conn))
+                    using (var cmd = new MySqlCommand(sql, conn))
                     {
                         cmd.Parameters.AddWithValue("@UID", userId);
                         int rows = cmd.ExecuteNonQuery();
@@ -379,7 +378,7 @@ namespace WinForm_RBAC
         /// </summary>
         public bool DeleteUser(int userId)
         {
-            using (var conn = new SqlConnection(_connectionString))
+            using (var conn = new MySqlConnection(_connectionString))
             {
                 conn.Open();
                 using (var trans = conn.BeginTransaction())
@@ -388,7 +387,7 @@ namespace WinForm_RBAC
                     {
                         // 1. 先删除角色关联表中的数据 (外键表)
                         const string sqlRoles = "DELETE FROM UserRoles WHERE UserID = @UID";
-                        using (var cmd = new SqlCommand(sqlRoles, conn, trans))
+                        using (var cmd = new MySqlCommand(sqlRoles, conn, trans))
                         {
                             cmd.Parameters.AddWithValue("@UID", userId);
                             cmd.ExecuteNonQuery();
@@ -396,7 +395,7 @@ namespace WinForm_RBAC
 
                         // 2. 再删除用户表中的数据 (主表)
                         const string sqlUser = "DELETE FROM Users WHERE UserID = @UID";
-                        using (var cmd = new SqlCommand(sqlUser, conn, trans))
+                        using (var cmd = new MySqlCommand(sqlUser, conn, trans))
                         {
                             cmd.Parameters.AddWithValue("@UID", userId);
                             cmd.ExecuteNonQuery();
@@ -418,16 +417,14 @@ namespace WinForm_RBAC
 
         public bool UpdateUserEnableStatus(int userId, bool isEnabled)
         {
-            const string sql = "UPDATE [dbo].[Users] SET [Enable] = @enable WHERE [UserID] = @id";
-            using (var conn = new System.Data.SqlClient.SqlConnection(_connectionString))
+            const string sql = "UPDATE Users SET Enable = @enable WHERE UserID = @id";
+            using (var conn = new MySqlConnection(_connectionString))
+            using (var cmd = new MySqlCommand(sql, conn))
             {
-                using (var cmd = new System.Data.SqlClient.SqlCommand(sql, conn))
-                {
-                    cmd.Parameters.AddWithValue("@enable", isEnabled);
-                    cmd.Parameters.AddWithValue("@id", userId);
-                    conn.Open();
-                    return cmd.ExecuteNonQuery() > 0;
-                }
+                cmd.Parameters.AddWithValue("@enable", isEnabled);
+                cmd.Parameters.AddWithValue("@id", userId);
+                conn.Open();
+                return cmd.ExecuteNonQuery() > 0;
             }
         }
 
@@ -443,10 +440,10 @@ namespace WinForm_RBAC
 
             try
             {
-                using (var conn = new SqlConnection(_connectionString))
+                using (var conn = new MySqlConnection(_connectionString))
                 {
                     conn.Open();
-                    using (var cmd = new SqlCommand(sql, conn))
+                    using (var cmd = new MySqlCommand(sql, conn))
                     {
                         cmd.Parameters.AddWithValue("@Pwd", passwordHash);
                         cmd.Parameters.AddWithValue("@UID", userId);
@@ -474,12 +471,12 @@ namespace WinForm_RBAC
 
             try
             {
-                using (var conn = new SqlConnection(_connectionString))
+                using (var conn = new MySqlConnection(_connectionString))
                 {
                     conn.Open();
 
                     // 检查重复
-                    using (var cmdCheck = new SqlCommand(checkSql, conn))
+                    using (var cmdCheck = new MySqlCommand(checkSql, conn))
                     {
                         cmdCheck.Parameters.AddWithValue("@Name", roleName);
                         int count = Convert.ToInt32(cmdCheck.ExecuteScalar());
@@ -487,7 +484,7 @@ namespace WinForm_RBAC
                     }
 
                     // 执行插入
-                    using (var cmdInsert = new SqlCommand(insertSql, conn))
+                    using (var cmdInsert = new MySqlCommand(insertSql, conn))
                     {
                         cmdInsert.Parameters.AddWithValue("@Name", roleName);
                         return cmdInsert.ExecuteNonQuery() > 0;
@@ -514,12 +511,12 @@ namespace WinForm_RBAC
 
             try
             {
-                using (var conn = new SqlConnection(_connectionString))
+                using (var conn = new MySqlConnection(_connectionString))
                 {
                     conn.Open();
 
                     // 检查重名
-                    using (var cmdCheck = new SqlCommand(checkSql, conn))
+                    using (var cmdCheck = new MySqlCommand(checkSql, conn))
                     {
                         cmdCheck.Parameters.AddWithValue("@Name", newRoleName);
                         cmdCheck.Parameters.AddWithValue("@RID", roleId);
@@ -527,7 +524,7 @@ namespace WinForm_RBAC
                     }
 
                     // 执行更新
-                    using (var cmdUpdate = new SqlCommand(updateSql, conn))
+                    using (var cmdUpdate = new MySqlCommand(updateSql, conn))
                     {
                         cmdUpdate.Parameters.AddWithValue("@Name", newRoleName);
                         cmdUpdate.Parameters.AddWithValue("@RID", roleId);
@@ -547,13 +544,13 @@ namespace WinForm_RBAC
         /// <returns>0:成功, 1:有用户引用, -1:失败</returns>
         public int DeleteRole(int roleId)
         {
-            using (var conn = new SqlConnection(_connectionString))
+            using (var conn = new MySqlConnection(_connectionString))
             {
                 conn.Open();
 
                 // 1. 检查是否有用户关联（防止误删导致用户丢失角色）
                 const string checkUserSql = "SELECT COUNT(1) FROM UserRoles WHERE RoleID = @RID";
-                using (var cmdCheck = new SqlCommand(checkUserSql, conn))
+                using (var cmdCheck = new MySqlCommand(checkUserSql, conn))
                 {
                     cmdCheck.Parameters.AddWithValue("@RID", roleId);
                     if (Convert.ToInt32(cmdCheck.ExecuteScalar()) > 0) return 1;
@@ -566,7 +563,7 @@ namespace WinForm_RBAC
                     {
                         // 先删权限关联（子表）
                         const string delPermSql = "DELETE FROM RolePermissions WHERE RoleID = @RID";
-                        using (var cmd = new SqlCommand(delPermSql, conn, trans))
+                        using (var cmd = new MySqlCommand(delPermSql, conn, trans))
                         {
                             cmd.Parameters.AddWithValue("@RID", roleId);
                             cmd.ExecuteNonQuery();
@@ -574,7 +571,7 @@ namespace WinForm_RBAC
 
                         // 再删角色本身（主表）
                         const string delRoleSql = "DELETE FROM Roles WHERE RoleID = @RID";
-                        using (var cmd = new SqlCommand(delRoleSql, conn, trans))
+                        using (var cmd = new MySqlCommand(delRoleSql, conn, trans))
                         {
                             cmd.Parameters.AddWithValue("@RID", roleId);
                             cmd.ExecuteNonQuery();

@@ -26,7 +26,7 @@ namespace WinForm_RBAC
             this.repositoryItemCheckEdit1.EditValueChanged += repositoryItemCheckEdit1_EditValueChanged;
 
             // 1. 获取原始字符串
-            string rawConn = ConfigurationManager.ConnectionStrings["DataBase_Noke_system"].ConnectionString;
+            string rawConn = ConfigurationManager.ConnectionStrings["WinForm_RBAC"].ConnectionString;
 
             // 2. 统一解密获取明文连接字符串
             _connString = GetDecryptedConnectionString(rawConn);
@@ -39,17 +39,14 @@ namespace WinForm_RBAC
         {
             try
             {
-                var builder = new System.Data.SqlClient.SqlConnectionStringBuilder(connectionString);
+                var builder = new MySql.Data.MySqlClient.MySqlConnectionStringBuilder(connectionString);
                 if (!string.IsNullOrEmpty(builder.Password))
-                {
-                    // 解密密码
                     builder.Password = AESHelper.Decrypt(builder.Password);
-                }
+
                 return builder.ToString();
             }
             catch
             {
-                // 如果解密失败，返回原字符串（防止已经是明文的情况）
                 return connectionString;
             }
         }
@@ -85,14 +82,14 @@ namespace WinForm_RBAC
                 // 2. 调用 Service 层获取数据
                 // 注意：这里的 _permissionService 必须是在构造函数中使用解密后的 _connString 初始化的
                 DataTable userTable = _permissionService.GetUserDetailList();
-
-                // 3. 绑定数据到 GridControl
                 gridControl1.DataSource = userTable;
+
+    
             }
             catch (Exception ex)
             {
                 DevExpress.XtraEditors.XtraMessageBox.Show(
-                    $"加载用户权限数据失败：{ex.Message}", "系统错误");
+                    $"加载用户权限数据失败：{ex.ToString()}", "系统错误");
             }
         }
 
