@@ -677,8 +677,20 @@ namespace WinForm_RBAC
                 if (result == 0)
                 {
                     XtraMessageBox.Show("角色已成功删除。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    // 在删除前记录当前索引
+                    int deletedIndex = listBoxControl1.SelectedIndex;
+
                     LoadRolesToListBox();
-                    treeList1.UncheckAll();
+                    // 落焦到上一项，兜底第 0 项
+                    if (listBoxControl1.Items.Count > 0)
+                    {
+                        listBoxControl1.SelectedIndex = Math.Max(0, deletedIndex - 1);
+                    }
+                    else
+                    {
+                        // 删的是最后一个角色：手动清空权限树，避免显示脏数据
+                        treeList1.ClearNodes();
+                    }
                 }
                 else
                 {
