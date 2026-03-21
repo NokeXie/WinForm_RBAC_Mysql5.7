@@ -50,7 +50,7 @@ namespace WinForm_RBAC
         private async void Login_simpleButton_Click(object sender, EventArgs e)
         {
             string user = Input_User.Text.Trim();
-            string password = Input_password.Text.Trim();
+            string password = Input_password.Text;
 
             if (string.IsNullOrEmpty(user) || string.IsNullOrEmpty(password))
             {
