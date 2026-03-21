@@ -71,7 +71,16 @@ namespace WinForm_RBAC
 
                 if (isAuthSuccess)
                 {
+
                     this.DialogResult = DialogResult.OK;
+                    // 生成本次登录的唯一标识（GUID）
+                    string myToken = Guid.NewGuid().ToString();
+
+                    // 存入全局变量，方便后面 Timer 拿来对比
+                    GlobalInfo.CurrentSessionToken = myToken;
+
+                    // 写入数据库，这步执行完，之前的客户端就会因为 Token 不匹配而被踢出
+                    PermissionService.UpdateUserToken(GlobalInfo.CurrentUserId, myToken);
                     this.Close();
                 }
                 else

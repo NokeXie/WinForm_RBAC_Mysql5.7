@@ -731,26 +731,25 @@ namespace WinForm_RBAC
 
         private void checkStatusTimer_Tick(object sender, EventArgs e)
         {
-            // 使用异步 Task 检查，防止 UI 界面在数据库连接时出现短暂卡顿
             Task.Run(() =>
             {
-                // 调用你刚才写好的方法
-                bool isInvalid = PermissionService.CheckIfKicked(GlobalInfo.CurrentUserId);
+                // 1. 先检查是否被管理员禁用 (你之前写的逻辑)
+                bool isKicked = PermissionService.CheckIfKicked(GlobalInfo.CurrentUserId);
 
-                if (isInvalid)
+                // 2. 再检查 Token 是否一致 (限制多开)
+                bool isTokenMatch = PermissionService.IsTokenValid(GlobalInfo.CurrentUserId, GlobalInfo.CurrentSessionToken);
+
+                if (isKicked || !isTokenMatch)
                 {
-                    // 发现状态异常，切回主线程操作 UI
                     this.Invoke(new Action(() =>
                     {
-                        checkStatusTimer.Stop(); // 停止计时器，防止重复弹窗
+                        checkStatusTimer.Stop();
 
-                        DevExpress.XtraEditors.XtraMessageBox.Show(
-                            "您的账号已被禁用或已不存在，系统将强制退出。",
-                            "安全警告",
-                            MessageBoxButtons.OK,
-                            MessageBoxIcon.Stop);
+                        string reason = isKicked ? "您的账号已被管理员禁用。" : "您的账号在另一台设备登录，当前连接已断开。";
 
-                        // 强制关闭程序或返回登录页
+                        DevExpress.XtraEditors.XtraMessageBox.Show(reason, "系统提示",
+                            MessageBoxButtons.OK, MessageBoxIcon.Warning);
+
                         Application.Exit();
                     }));
                 }

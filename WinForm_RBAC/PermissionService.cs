@@ -754,5 +754,39 @@ namespace WinForm_RBAC
                 return false;
             }
         }
+        // PermissionService.cs
+
+        // 1. 登录成功后更新数据库的 Token
+        public static void UpdateUserToken(int userId, string token)
+        {
+            using (var conn = new MySqlConnection(GlobalInfo.ConnectionString))
+            {
+                conn.Open();
+                const string sql = "UPDATE Users SET CurrentToken = @token WHERE UserID = @uid";
+                using (var cmd = new MySqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@token", token);
+                    cmd.Parameters.AddWithValue("@uid", userId);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        // 2. 供 Timer 调用，检查数据库 Token 是否还是本地这一个
+        public static bool IsTokenValid(int userId, string localToken)
+        {
+            using (var conn = new MySqlConnection(GlobalInfo.ConnectionString))
+            {
+                conn.Open();
+                const string sql = "SELECT CurrentToken FROM Users WHERE UserID = @uid";
+                using (var cmd = new MySqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@uid", userId);
+                    object dbToken = cmd.ExecuteScalar();
+                    // 如果数据库里的 Token 变了，说明别处有新的登录
+                    return dbToken != null && dbToken.ToString() == localToken;
+                }
+            }
+        }
     }
 }
