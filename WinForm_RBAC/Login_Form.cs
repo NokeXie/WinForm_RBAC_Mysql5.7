@@ -70,7 +70,7 @@ namespace WinForm_RBAC
 
                     if (isAuthSuccess)
                     {
-                        LogonUser = user;
+                        
                         this.DialogResult = DialogResult.OK;
                         this.Close();
                     }
