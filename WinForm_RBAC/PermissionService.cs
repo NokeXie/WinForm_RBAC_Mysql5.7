@@ -788,5 +788,54 @@ namespace WinForm_RBAC
                 }
             }
         }
+        // PermissionService.cs
+
+        /// <summary>
+        /// 检查登录频率：判断上次登录时间是否在10秒内
+        /// </summary>
+        public static bool IsLoginTooFrequent(int userId, out int remainingSeconds)
+        {
+            remainingSeconds = 0;
+            using (var conn = new MySqlConnection(GlobalInfo.ConnectionString))
+            {
+                conn.Open();
+                const string sql = "SELECT LastLoginTime FROM Users WHERE UserID = @uid";
+                using (var cmd = new MySqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@uid", userId);
+                    object result = cmd.ExecuteScalar();
+
+                    if (result != null && result != DBNull.Value)
+                    {
+                        DateTime lastTime = Convert.ToDateTime(result);
+                        double diff = (DateTime.Now - lastTime).TotalSeconds;
+
+                        if (diff < 10) // 限制10秒
+                        {
+                            remainingSeconds = 10 - (int)diff;
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        /// <summary>
+        /// 更新登录时间（在登录成功逻辑中调用）
+        /// </summary>
+        public static void UpdateLastLoginTime(int userId)
+        {
+            using (var conn = new MySqlConnection(GlobalInfo.ConnectionString))
+            {
+                conn.Open();
+                const string sql = "UPDATE Users SET LastLoginTime = NOW() WHERE UserID = @uid";
+                using (var cmd = new MySqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@uid", userId);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
     }
 }

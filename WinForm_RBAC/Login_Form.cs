@@ -71,7 +71,19 @@ namespace WinForm_RBAC
 
                 if (isAuthSuccess)
                 {
-
+                    int userId = GlobalInfo.CurrentUserId;
+                    
+                    // --- 新增：登录频率检查 ---
+                    if (PermissionService.IsLoginTooFrequent(userId, out int waitSec))
+                    {
+                        DevExpress.XtraEditors.XtraMessageBox.Show(
+                            $"登录过于频繁，请在 {waitSec} 秒后再试。",
+                            "提示",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Warning);
+                        return; // 拦截登录
+                    }
+                    PermissionService.UpdateLastLoginTime(userId);
                     this.DialogResult = DialogResult.OK;
                     // 生成本次登录的唯一标识（GUID）
                     string myToken = Guid.NewGuid().ToString();
