@@ -15,15 +15,13 @@ namespace WinForm_RBAC
     {
         #region --- 字段与构造函数 ---
 
-       
-        private readonly string _connString; // 这里的 _connString 将存储解密后的明文字符串
 
         public Main_Form()
         {
             InitializeComponent();
             // 手动初始化 Timer
             checkStatusTimer = new Timer();
-            checkStatusTimer.Interval = 30000; // 30秒
+            checkStatusTimer.Interval = 10000; // 30秒
             checkStatusTimer.Tick += checkStatusTimer_Tick; // 绑定事件
             checkStatusTimer.Start();
 
@@ -31,30 +29,10 @@ namespace WinForm_RBAC
             this.gridView1.CellValueChanged += gridView1_CellValueChanged;
             this.repositoryItemCheckEdit1.EditValueChanged += repositoryItemCheckEdit1_EditValueChanged;
 
-            // 1. 获取原始字符串
-            string rawConn = ConfigurationManager.ConnectionStrings["WinForm_RBAC"].ConnectionString;
-
-            // 2. 统一解密获取明文连接字符串
-            _connString = GetDecryptedConnectionString(rawConn);
 
 
         }
 
-        private string GetDecryptedConnectionString(string connectionString)
-        {
-            try
-            {
-                var builder = new MySql.Data.MySqlClient.MySqlConnectionStringBuilder(connectionString);
-                if (!string.IsNullOrEmpty(builder.Password))
-                    builder.Password = AESHelper.Decrypt(builder.Password);
-
-                return builder.ToString();
-            }
-            catch
-            {
-                return connectionString;
-            }
-        }
 
         private void Main_Form_Load(object sender, EventArgs e)
         {
@@ -224,6 +202,23 @@ namespace WinForm_RBAC
             // 2. 获取用户信息
             int userId = Convert.ToInt32(gridView1.GetRowCellValue(rowHandle, "UserID"));
             string userName = gridView1.GetRowCellValue(rowHandle, "用户名")?.ToString();
+        
+            if (userId == GlobalInfo.CurrentUserId)
+            {
+                DevExpress.XtraEditors.XtraMessageBox.Show(
+                    "安全警告：您不能禁用或删除当前登录的管理员账号！",
+                    "操作受限",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning);
+                // 5. 刷新数据并保留焦点
+                DataTable userTable = PermissionService.GetUserDetailList();
+
+                // 绑定数据到 GridControl
+                gridControl1.DataSource = userTable;
+                gridView1.FocusedRowHandle = rowHandle;
+
+                return; // 拦截，不向下执行
+            }
 
             // 3. 弹出二次确认框，防止误操作
             string message = $"确定要禁用用户「{userName}」吗？\n禁用后该用户将无法登录系统。";
@@ -389,8 +384,25 @@ namespace WinForm_RBAC
                 if (view == null) return;
 
                 // 1. 获取当前行信息
+
                 object userIdObj = view.GetRowCellValue(e.RowHandle, "UserID");
+                int targetUserId = Convert.ToInt32(userIdObj);
                 object userNameObj = view.GetRowCellValue(e.RowHandle, "用户名");
+                if (targetUserId == GlobalInfo.CurrentUserId)
+                {
+                    DevExpress.XtraEditors.XtraMessageBox.Show(
+                        "安全警告：您不能禁用或删除当前登录的管理员账号！",
+                        "操作受限",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning);
+                    // 5. 刷新数据并保留焦点
+                    DataTable userTable = PermissionService.GetUserDetailList();
+
+                    // 绑定数据到 GridControl
+                    gridControl1.DataSource = userTable;
+                    
+                    return; // 拦截，不向下执行
+                }
                 if (userIdObj == null) return;
 
                 int userId = Convert.ToInt32(userIdObj);
