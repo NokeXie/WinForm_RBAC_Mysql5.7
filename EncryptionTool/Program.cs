@@ -54,11 +54,11 @@ namespace EncryptionTool
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine(secret);
                 Console.ResetColor();
-
+                Console.WriteLine("1. 打开主项目的 App.config 或 Web.config 文件。");
+                Console.WriteLine("2. 你现在可以直接在 App.config 中按 [Ctrl+V] 粘贴。");
+                Console.WriteLine("3. 在 connectionString 属性中找到 password= 部分，替换为该字符串。");
                 Console.WriteLine("\n--------------------------------------------------");
-                Console.WriteLine("操作完成：你现在可以直接在 App.config 中按 [Ctrl+V] 粘贴。");
-                Console.WriteLine("--------------------------------------------------");
-
+               
                 #endregion
             }
             catch (Exception ex)
