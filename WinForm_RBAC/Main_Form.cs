@@ -743,27 +743,40 @@ namespace WinForm_RBAC
 
         private void checkStatusTimer_Tick(object sender, EventArgs e)
         {
+            // 使用 Task.Run 异步执行，避免阻塞 UI 线程
             Task.Run(() =>
             {
-                // 1. 先检查是否被管理员禁用 (你之前写的逻辑)
-                bool isKicked = PermissionService.CheckIfKicked(GlobalInfo.CurrentUserId);
-
-                // 2. 再检查 Token 是否一致 (限制多开)
-                bool isTokenMatch = PermissionService.IsTokenValid(GlobalInfo.CurrentUserId, GlobalInfo.CurrentSessionToken);
-
-                if (isKicked || !isTokenMatch)
+                try
                 {
-                    this.Invoke(new Action(() =>
+                    // 1. 先检查是否被管理员禁用
+                    bool isKicked = PermissionService.CheckIfKicked(GlobalInfo.CurrentUserId);
+
+                    // 2. 再检查 Token 是否一致 (限制多开)
+                    bool isTokenMatch = PermissionService.IsTokenValid(GlobalInfo.CurrentUserId, GlobalInfo.CurrentSessionToken);
+
+                    if (isKicked || !isTokenMatch)
                     {
-                        checkStatusTimer.Stop();
+                        // 回到 UI 线程处理强制退出逻辑
+                        this.Invoke(new Action(() =>
+                        {
+                            checkStatusTimer.Stop();
 
-                        string reason = isKicked ? "您的账号已被管理员禁用。" : "您的账号在另一台设备登录，当前连接已断开。";
+                            string reason = isKicked ? "您的账号已被管理员禁用。" : "您的账号在另一台设备登录，当前连接已断开。";
 
-                        DevExpress.XtraEditors.XtraMessageBox.Show(reason, "系统提示",
-                            MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            DevExpress.XtraEditors.XtraMessageBox.Show(reason, "系统提示",
+                                MessageBoxButtons.OK, MessageBoxIcon.Warning);
 
-                        Application.Exit();
-                    }));
+                            Application.Exit();
+                        }));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // 这里处理数据库闪断或网络问题
+                    // 建议：仅记录日志或静默处理，不要在这里弹窗，否则每30秒弹一个报错会吵死用户
+                    MessageBox.Show(@"状态检查循环发生异常（可能是网络波动）: " + ex.Message);
+
+                    // 如果你想在网络彻底断开时提醒用户，可以增加一个计数器，连续失败 N 次再提示
                 }
             });
         }
