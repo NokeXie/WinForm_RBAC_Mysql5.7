@@ -5,25 +5,21 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq; // 引入 Linq 以便更简洁地操作集合
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace WinForm_RBAC
 {
     public class PermissionService
     {
-        private readonly string _connectionString;
-
-        public PermissionService(string connectionString)
-        {
-            _connectionString = connectionString;
-        }
+        
 
         // ================= 数据访问层 (DAL) =================
 
-        public DataTable GetAllRoles()
+        public static DataTable GetAllRoles()
         {
             var dt = new DataTable();
-            using (var conn = new MySqlConnection(_connectionString))
+            using (var conn = new MySqlConnection(GlobalInfo.ConnectionString))
             {
                 const string sql = "SELECT RoleID, RoleName FROM Roles";
                 using (var da = new MySqlDataAdapter(sql, conn))
@@ -34,10 +30,10 @@ namespace WinForm_RBAC
             return dt;
         }
 
-        public DataTable GetAllPermissions()
+        public static DataTable GetAllPermissions()
         {
             var dt = new DataTable();
-            using (var conn = new MySqlConnection(_connectionString))
+            using (var conn = new MySqlConnection(GlobalInfo.ConnectionString))
             {
                 const string sql = "SELECT PermissionCode, ParentCode, Description FROM Permissions";
                 using (var da = new MySqlDataAdapter(sql, conn))
@@ -48,11 +44,11 @@ namespace WinForm_RBAC
             return dt;
         }
 
-        public List<string> GetRolePermissions(int roleId)
+        public static List<string> GetRolePermissions(int roleId)
         {
             var codes = new List<string>();
             const string sql = "SELECT PermissionCode FROM RolePermissions WHERE RoleID = @RoleID";
-            using (var conn = new MySqlConnection(_connectionString))
+            using (var conn = new MySqlConnection(GlobalInfo.ConnectionString))
             using (var cmd = new MySqlCommand(sql, conn))
             {
                 cmd.Parameters.Add("@RoleID", MySqlDbType.VarChar).Value = roleId;
@@ -68,9 +64,9 @@ namespace WinForm_RBAC
             return codes;
         }
 
-        public void SaveRolePermissions(int roleId, List<string> permissionCodes)
+        public static void SaveRolePermissions(int roleId, List<string> permissionCodes)
         {
-            using (var conn = new MySqlConnection(_connectionString))
+            using (var conn = new MySqlConnection(GlobalInfo.ConnectionString))
             {
                 conn.Open();
                 using (var transaction = conn.BeginTransaction())
@@ -111,7 +107,7 @@ namespace WinForm_RBAC
         /// <summary>
         /// 获取包含角色名称的用户详细列表
         /// </summary>
-        public DataTable GetUserDetailList()
+        public static DataTable GetUserDetailList()
         {
             var dt = new DataTable();
             const string sql = @"
@@ -127,7 +123,7 @@ namespace WinForm_RBAC
         INNER JOIN UserRoles ON UserRoles.UserID = Users.UserID
         INNER JOIN Roles     ON Roles.RoleID     = UserRoles.RoleID";
 
-            using (var conn = new MySqlConnection(_connectionString))
+            using (var conn = new MySqlConnection(GlobalInfo.ConnectionString))
 
             using (var da = new MySqlDataAdapter(sql, conn))
             {
@@ -139,7 +135,7 @@ namespace WinForm_RBAC
         /// <summary>
         /// 获取属于指定角色的所有用户名
         /// </summary>
-        public List<string> GetUserNamesByRole(int roleId)
+        public static List<string> GetUserNamesByRole(int roleId)
         {
             var userNames = new List<string>();
             const string sql = @"
@@ -150,7 +146,7 @@ namespace WinForm_RBAC
 
             try
             {
-                using (var conn = new MySqlConnection(_connectionString))
+                using (var conn = new MySqlConnection(GlobalInfo.ConnectionString))
                 {
                     conn.Open();
                     using (var cmd = new MySqlCommand(sql, conn))
@@ -173,7 +169,7 @@ namespace WinForm_RBAC
         // ================= 业务逻辑层 (BLL) =================
 
         // 1. 处理节点状态联动 (保持不变)
-        public void HandleNodeCheckState(TreeListNode node, bool isChecked)
+        public static void HandleNodeCheckState(TreeListNode node, bool isChecked)
         {
             if (node.Nodes.Count > 0)
             {
@@ -192,7 +188,7 @@ namespace WinForm_RBAC
 
         // 2. 新增：递归遍历 UI 树，收集所有选中的权限代码
         // 将原 Main_Form 中的 CollectCheckedPermissions 逻辑移动到这里
-        public List<string> CollectAllCheckedPermissionCodes(TreeList treeList)
+        public static List<string> CollectAllCheckedPermissionCodes(TreeList treeList)
         {
             var selectedCodes = new List<string>();
             foreach (TreeListNode node in treeList.Nodes)
@@ -204,7 +200,7 @@ namespace WinForm_RBAC
 
         // 3. 新增：递归遍历 UI 树，根据已有的权限代码勾选节点
         // 将原 Main_Form 中的 CheckNodeRecursive 逻辑移动到这里
-        public void ApplyRolePermissionsToTree(TreeList treeList, List<string> rolePermissionCodes)
+        public static void ApplyRolePermissionsToTree(TreeList treeList, List<string> rolePermissionCodes)
         {
             treeList.UncheckAll();
             foreach (TreeListNode node in treeList.Nodes)
@@ -214,9 +210,9 @@ namespace WinForm_RBAC
         }
 
         //编辑用户密码和角色方法
-        public bool UpdateUser(int userId, string userName, string password, int roleId)
+        public static bool UpdateUser(int userId, string userName, string password, int roleId)
         {
-            using (var conn = new MySqlConnection(_connectionString))
+            using (var conn = new MySqlConnection(GlobalInfo.ConnectionString))
             {
                 conn.Open();
                 using (var trans = conn.BeginTransaction())
@@ -268,9 +264,9 @@ namespace WinForm_RBAC
         /// <summary>
         /// 新增用户及其角色关联
         /// </summary>
-        public bool AddUser(string userName, string password, int roleId)
+        public static bool AddUser(string userName, string password, int roleId)
         {
-            using (var conn = new MySqlConnection(_connectionString))
+            using (var conn = new MySqlConnection(GlobalInfo.ConnectionString))
             {
                 conn.Open();
                 using (var trans = conn.BeginTransaction())
@@ -317,14 +313,14 @@ namespace WinForm_RBAC
         /// </summary>
         /// <param name="userId">用户ID</param>
         /// <returns>是否成功</returns>
-        public bool DisableUser(int userId)
+        public static bool DisableUser(int userId)
         {
             // 这里使用简单的 SQL 更新
             const string sql = "UPDATE Users SET Enable = 0 WHERE UserID = @UID";
 
             try
             {
-                using (var conn = new MySqlConnection(_connectionString))
+                using (var conn = new MySqlConnection(GlobalInfo.ConnectionString))
                 {
                     conn.Open();
                     using (var cmd = new MySqlCommand(sql, conn))
@@ -347,14 +343,14 @@ namespace WinForm_RBAC
         /// </summary>
         /// <param name="userId">用户ID</param>
         /// <returns>是否成功</returns>
-        public bool EnableUser(int userId)
+        public static bool EnableUser(int userId)
         {
             // 将 Enable 设为 1，对应 Login_Form 中的验证条件
             const string sql = "UPDATE Users SET Enable = 1 WHERE UserID = @UID";
 
             try
             {
-                using (var conn = new MySqlConnection(_connectionString))
+                using (var conn = new MySqlConnection(GlobalInfo.ConnectionString))
                 {
                     conn.Open();
                     using (var cmd = new MySqlCommand(sql, conn))
@@ -375,9 +371,9 @@ namespace WinForm_RBAC
         /// <summary>
         /// 物理删除用户及其所有角色关联
         /// </summary>
-        public bool DeleteUser(int userId)
+        public static bool DeleteUser(int userId)
         {
-            using (var conn = new MySqlConnection(_connectionString))
+            using (var conn = new MySqlConnection(GlobalInfo.ConnectionString))
             {
                 conn.Open();
                 using (var trans = conn.BeginTransaction())
@@ -414,10 +410,10 @@ namespace WinForm_RBAC
             }
         }
 
-        public bool UpdateUserEnableStatus(int userId, bool isEnabled)
+        public static bool UpdateUserEnableStatus(int userId, bool isEnabled)
         {
             const string sql = "UPDATE Users SET Enable = @enable WHERE UserID = @id";
-            using (var conn = new MySqlConnection(_connectionString))
+            using (var conn = new MySqlConnection(GlobalInfo.ConnectionString))
             using (var cmd = new MySqlCommand(sql, conn))
             {
                 cmd.Parameters.AddWithValue("@enable", isEnabled);
@@ -430,7 +426,7 @@ namespace WinForm_RBAC
         /// <summary>
         /// 直接修改指定用户的密码
         /// </summary>
-        public bool UpdateUserPasswordDirectly(int userId, string newPwd)
+        public static bool UpdateUserPasswordDirectly(int userId, string newPwd)
         {
             // 将明文密码加密为哈希
             string passwordHash = PasswordHasher.HashPassword(newPwd);
@@ -439,7 +435,7 @@ namespace WinForm_RBAC
 
             try
             {
-                using (var conn = new MySqlConnection(_connectionString))
+                using (var conn = new MySqlConnection(GlobalInfo.ConnectionString))
                 {
                     conn.Open();
                     using (var cmd = new MySqlCommand(sql, conn))
@@ -462,7 +458,7 @@ namespace WinForm_RBAC
         /// </summary>
         /// <param name="roleName">角色名称</param>
         /// <returns>是否成功</returns>
-        public bool AddRole(string roleName)
+        public static bool AddRole(string roleName)
         {
             // 1. 先检查重名，防止数据库报错
             const string checkSql = "SELECT COUNT(1) FROM Roles WHERE RoleName = @Name";
@@ -470,7 +466,7 @@ namespace WinForm_RBAC
 
             try
             {
-                using (var conn = new MySqlConnection(_connectionString))
+                using (var conn = new MySqlConnection(GlobalInfo.ConnectionString))
                 {
                     conn.Open();
 
@@ -502,7 +498,7 @@ namespace WinForm_RBAC
         /// <param name="roleId">角色ID</param>
         /// <param name="newRoleName">新名称</param>
         /// <returns>是否成功</returns>
-        public bool UpdateRoleName(int roleId, string newRoleName)
+        public static bool UpdateRoleName(int roleId, string newRoleName)
         {
             // 1. 检查新名称是否已被其他角色占用
             const string checkSql = "SELECT COUNT(1) FROM Roles WHERE RoleName = @Name AND RoleID != @RID";
@@ -510,7 +506,7 @@ namespace WinForm_RBAC
 
             try
             {
-                using (var conn = new MySqlConnection(_connectionString))
+                using (var conn = new MySqlConnection(GlobalInfo.ConnectionString))
                 {
                     conn.Open();
 
@@ -541,9 +537,9 @@ namespace WinForm_RBAC
         /// 删除角色
         /// </summary>
         /// <returns>0:成功, 1:有用户引用, -1:失败</returns>
-        public int DeleteRole(int roleId)
+        public static int DeleteRole(int roleId)
         {
-            using (var conn = new MySqlConnection(_connectionString))
+            using (var conn = new MySqlConnection(GlobalInfo.ConnectionString))
             {
                 conn.Open();
 
@@ -590,7 +586,7 @@ namespace WinForm_RBAC
 
         // ================= 私有递归辅助方法 =================
 
-        private void SetChildNodesCheckedState(TreeListNode parentNode, bool check)
+        private static void SetChildNodesCheckedState(TreeListNode parentNode, bool check)
         {
             foreach (TreeListNode child in parentNode.Nodes)
             {
@@ -602,7 +598,7 @@ namespace WinForm_RBAC
             }
         }
 
-        private void SetParentNodeChecked(TreeListNode node)
+        private static void SetParentNodeChecked(TreeListNode node)
         {
             if (node.ParentNode != null)
             {
@@ -611,7 +607,7 @@ namespace WinForm_RBAC
             }
         }
 
-        private void CheckParentNodeState(TreeListNode parentNode)
+        private static void CheckParentNodeState(TreeListNode parentNode)
         {
             if (parentNode == null) return;
 
@@ -629,7 +625,7 @@ namespace WinForm_RBAC
             }
         }
 
-        private void CollectCheckedRecursive(TreeListNode node, List<string> list)
+        private static void CollectCheckedRecursive(TreeListNode node, List<string> list)
         {
             string code = node["PermissionCode"]?.ToString();
             if (!string.IsNullOrEmpty(code) && node.Checked)
@@ -643,7 +639,7 @@ namespace WinForm_RBAC
             }
         }
 
-        private void CheckNodeRecursive(TreeListNode node, List<string> rolePermissionCodes)
+        private static void CheckNodeRecursive(TreeListNode node, List<string> rolePermissionCodes)
         {
             string code = node["PermissionCode"]?.ToString();
             if (!string.IsNullOrEmpty(code) && rolePermissionCodes.Contains(code))
@@ -654,6 +650,70 @@ namespace WinForm_RBAC
             foreach (TreeListNode childNode in node.Nodes)
             {
                 CheckNodeRecursive(childNode, rolePermissionCodes);
+            }
+        }
+        // 需要引入命名空间
+        // using MySql.Data.MySqlClient;
+        // using System.Threading.Tasks;
+
+        public static async Task<bool> AuthenticateAndLoadPermissionsAsync(string user, string password)
+        {
+            // 1. 密码 Hash 处理
+            string passwordHash = PasswordHasher.HashPassword(password);
+
+            try
+            {
+                // 直接使用全局连接字符串
+                using (var conn = new MySqlConnection(GlobalInfo.ConnectionString))
+                {
+                    await conn.OpenAsync();
+
+                    // --- 步骤 1：验证用户 ---
+                    const string authSql = "SELECT UserID FROM Users WHERE UserName = @user AND PasswordHash = @hash AND Enable = 1";
+                    object result;
+                    using (var cmd = new MySqlCommand(authSql, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@user", user);
+                        cmd.Parameters.AddWithValue("@hash", passwordHash);
+                        result = await cmd.ExecuteScalarAsync();
+                    }
+
+                    if (result == null) return false; // 验证失败，返回 false 给 UI 层处理
+
+                    int userId = Convert.ToInt32(result);
+
+                    // --- 步骤 2：加载权限 ---
+                    const string permSql = @"
+                SELECT DISTINCT p.PermissionCode
+                FROM UserRoles ur
+                INNER JOIN RolePermissions rp ON ur.RoleID = rp.RoleID
+                INNER JOIN Permissions p ON rp.PermissionCode = p.PermissionCode
+                WHERE ur.UserID = @userId";
+
+                    UserSession.Permissions.Clear();
+                    using (var permCmd = new MySqlCommand(permSql, conn))
+                    {
+                        permCmd.Parameters.AddWithValue("@userId", userId);
+                        using (var reader = await permCmd.ExecuteReaderAsync())
+                        {
+                            while (await reader.ReadAsync())
+                            {
+                                UserSession.Permissions.Add(reader["PermissionCode"].ToString());
+                            }
+                        }
+                    }
+
+                    // --- 步骤 3：记录全局状态 ---
+                    GlobalInfo.CurrentUserId = userId;
+                    GlobalInfo.CurrentUserName = user;
+
+                    return true;
+                }
+            }
+            catch (Exception ex)
+            {
+                // 这里可以记录日志，然后向上层抛出异常或返回 false
+                throw new Exception("数据库连接或查询异常，请检查配置。", ex);
             }
         }
     }

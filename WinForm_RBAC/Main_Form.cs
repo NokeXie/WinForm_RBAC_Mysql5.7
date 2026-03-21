@@ -14,7 +14,7 @@ namespace WinForm_RBAC
     {
         #region --- 字段与构造函数 ---
 
-        private readonly PermissionService _permissionService;
+       
         private readonly string _connString; // 这里的 _connString 将存储解密后的明文字符串
 
         public Main_Form()
@@ -31,8 +31,7 @@ namespace WinForm_RBAC
             // 2. 统一解密获取明文连接字符串
             _connString = GetDecryptedConnectionString(rawConn);
 
-            // 3. 使用解密后的字符串初始化服务层
-            _permissionService = new PermissionService(_connString);
+
         }
 
         private string GetDecryptedConnectionString(string connectionString)
@@ -79,9 +78,7 @@ namespace WinForm_RBAC
                 用户管理.PageVisible = true;
                 xtraTabControl1.SelectedTabPage = 用户管理;
 
-                // 2. 调用 Service 层获取数据
-                // 注意：这里的 _permissionService 必须是在构造函数中使用解密后的 _connString 初始化的
-                DataTable userTable = _permissionService.GetUserDetailList();
+                DataTable userTable = PermissionService.GetUserDetailList();
                 gridControl1.DataSource = userTable;
 
 
@@ -130,7 +127,7 @@ namespace WinForm_RBAC
         /// </summary>
         private void btnAddUser_Click(object sender, EventArgs e)
         {
-            DataTable dtRoles = _permissionService.GetAllRoles();
+            DataTable dtRoles = PermissionService.GetAllRoles();
 
             // 传入 -1 代表新增模式
             using (var addForm = new UserEditForm(dtRoles, -1, "", -1))
@@ -140,7 +137,7 @@ namespace WinForm_RBAC
                 if (addForm.ShowDialog() == DialogResult.OK)
                 {
                     // 此时能进到这里，说明 NewUserName 和 NewPassword 已经过窗体内部校验
-                    bool isSuccess = _permissionService.AddUser(
+                    bool isSuccess = PermissionService.AddUser(
                         addForm.NewUserName,
                         addForm.NewPassword,
                         addForm.NewRoleId
@@ -150,7 +147,7 @@ namespace WinForm_RBAC
                     {
                         XtraMessageBox.Show("用户新增成功！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
-                        DataTable userTable = _permissionService.GetUserDetailList();
+                        DataTable userTable = PermissionService.GetUserDetailList();
 
                         // 绑定数据到 GridControl
                         gridControl1.DataSource = userTable;
@@ -179,13 +176,13 @@ namespace WinForm_RBAC
             int currentRoleId = Convert.ToInt32(gridView1.GetRowCellValue(savedRowHandle, "RoleID"));
 
             // 3. 弹出编辑对话框
-            DataTable dtRoles = _permissionService.GetAllRoles();
+            DataTable dtRoles = PermissionService.GetAllRoles();
             using (var editForm = new UserEditForm(dtRoles, userId, userName, currentRoleId))
             {
                 if (editForm.ShowDialog() == DialogResult.OK)
                 {
                     // 执行数据库更新
-                    bool isSuccess = _permissionService.UpdateUser(
+                    bool isSuccess = PermissionService.UpdateUser(
                         userId,
                         editForm.NewUserName,
                         editForm.NewPassword,
@@ -197,7 +194,7 @@ namespace WinForm_RBAC
                         XtraMessageBox.Show("保存成功！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                         // 4. 刷新并还原焦点
-                        DataTable userTable = _permissionService.GetUserDetailList();
+                        DataTable userTable = PermissionService.GetUserDetailList();
 
                         // 绑定数据到 GridControl
                         gridControl1.DataSource = userTable;
@@ -227,14 +224,14 @@ namespace WinForm_RBAC
             if (XtraMessageBox.Show(message, "操作确认", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
                 // 4. 调用服务层执行禁用
-                bool isSuccess = _permissionService.DisableUser(userId);
+                bool isSuccess = PermissionService.DisableUser(userId);
 
                 if (isSuccess)
                 {
                     XtraMessageBox.Show("用户已成功禁用。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                     // 5. 刷新数据并保留焦点
-                    DataTable userTable = _permissionService.GetUserDetailList();
+                    DataTable userTable = PermissionService.GetUserDetailList();
 
                     // 绑定数据到 GridControl
                     gridControl1.DataSource = userTable;
@@ -268,14 +265,14 @@ namespace WinForm_RBAC
                 MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
                 // 4. 调用服务层
-                bool isSuccess = _permissionService.EnableUser(userId);
+                bool isSuccess = PermissionService.EnableUser(userId);
 
                 if (isSuccess)
                 {
                     XtraMessageBox.Show("用户已成功启用。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                     // 5. 刷新数据并保留焦点
-                    DataTable userTable = _permissionService.GetUserDetailList();
+                    DataTable userTable = PermissionService.GetUserDetailList();
 
                     // 绑定数据到 GridControl
                     gridControl1.DataSource = userTable;
@@ -306,14 +303,14 @@ namespace WinForm_RBAC
             if (XtraMessageBox.Show(confirmMsg, "永久删除确认", MessageBoxButtons.YesNo, MessageBoxIcon.Stop) == DialogResult.Yes)
             {
                 // 4. 调用服务层执行物理删除
-                bool isSuccess = _permissionService.DeleteUser(userId);
+                bool isSuccess = PermissionService.DeleteUser(userId);
 
                 if (isSuccess)
                 {
                     XtraMessageBox.Show("用户及关联数据已彻底删除。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
                     // 5. 刷新数据
-                    DataTable userTable = _permissionService.GetUserDetailList();
+                    DataTable userTable = PermissionService.GetUserDetailList();
 
                     // 绑定数据到 GridControl
                     gridControl1.DataSource = userTable;
@@ -361,7 +358,7 @@ namespace WinForm_RBAC
                 }
 
                 // 4. 调用 Service 层执行更新（内部处理哈希加密）
-                bool isSuccess = _permissionService.UpdateUserPasswordDirectly(currentUserId, newPwd);
+                bool isSuccess = PermissionService.UpdateUserPasswordDirectly(currentUserId, newPwd);
 
                 if (isSuccess)
                 {
@@ -398,7 +395,7 @@ namespace WinForm_RBAC
                 // 2. 调用 Service 更新数据库
                 try
                 {
-                    bool success = _permissionService.UpdateUserEnableStatus(userId, newStatus);
+                    bool success = PermissionService.UpdateUserEnableStatus(userId, newStatus);
 
                     if (success)
                     {
@@ -494,7 +491,7 @@ namespace WinForm_RBAC
                 treeList.OptionsView.ShowCheckBoxes = true;
                 treeList.OptionsBehavior.AllowRecursiveNodeChecking = false;
 
-                treeList.DataSource = _permissionService.GetAllPermissions();
+                treeList.DataSource = PermissionService.GetAllPermissions();
                 treeList.KeyFieldName = "PermissionCode";
                 treeList.ParentFieldName = "ParentCode";
                 treeList.ExpandAll();
@@ -514,7 +511,7 @@ namespace WinForm_RBAC
         private void LoadRolesToListBox()
         {
             listBoxControl1.Items.Clear();
-            var dt = _permissionService.GetAllRoles();
+            var dt = PermissionService.GetAllRoles();
             foreach (DataRow row in dt.Rows)
             {
                 listBoxControl1.Items.Add(new DevExpress.XtraEditors.Controls.ImageListBoxItem
@@ -535,7 +532,7 @@ namespace WinForm_RBAC
                 tree.BeginUpdate();
                 try
                 {
-                    _permissionService.HandleNodeCheckState(e.Node, e.Node.Checked);
+                    PermissionService.HandleNodeCheckState(e.Node, e.Node.Checked);
                 }
                 finally
                 {
@@ -557,8 +554,8 @@ namespace WinForm_RBAC
                     treeList1.AfterCheckNode -= treeList1_AfterCheckNode;
                     try
                     {
-                        var codes = _permissionService.GetRolePermissions(roleId);
-                        _permissionService.ApplyRolePermissionsToTree(treeList1, codes);
+                        var codes = PermissionService.GetRolePermissions(roleId);
+                        PermissionService.ApplyRolePermissionsToTree(treeList1, codes);
                     }
                     finally
                     {
@@ -579,7 +576,7 @@ namespace WinForm_RBAC
             if (!string.IsNullOrWhiteSpace(newRoleName))
             {
                 // 2. 调用服务层检查并保存
-                bool isSuccess = _permissionService.AddRole(newRoleName.Trim());
+                bool isSuccess = PermissionService.AddRole(newRoleName.Trim());
 
                 if (isSuccess)
                 {
@@ -622,7 +619,7 @@ namespace WinForm_RBAC
             // 3. 只有当名称发生变化且不为空时才执行更新
             if (!string.IsNullOrWhiteSpace(newRoleName) && newRoleName != oldRoleName)
             {
-                bool isSuccess = _permissionService.UpdateRoleName(roleId, newRoleName.Trim());
+                bool isSuccess = PermissionService.UpdateRoleName(roleId, newRoleName.Trim());
 
                 if (isSuccess)
                 {
@@ -654,7 +651,7 @@ namespace WinForm_RBAC
             string roleName = selectedItem.Value.ToString();
 
             // 2. 核心校验：获取正在使用该角色的用户名单
-            List<string> activeUsers = _permissionService.GetUserNamesByRole(roleId);
+            List<string> activeUsers = PermissionService.GetUserNamesByRole(roleId);
 
             if (activeUsers.Count > 0)
             {
@@ -672,7 +669,7 @@ namespace WinForm_RBAC
             string confirmMsg = $"确定要永久删除角色「{roleName}」吗？\n此操作将同时清除该角色的所有权限配置。";
             if (XtraMessageBox.Show(confirmMsg, "最终确认", MessageBoxButtons.YesNo, MessageBoxIcon.Stop) == DialogResult.Yes)
             {
-                int result = _permissionService.DeleteRole(roleId);
+                int result = PermissionService.DeleteRole(roleId);
 
                 if (result == 0)
                 {
@@ -707,8 +704,8 @@ namespace WinForm_RBAC
             if (listBoxControl1.SelectedItem is DevExpress.XtraEditors.Controls.ImageListBoxItem item)
             {
                 int roleId = Convert.ToInt32(item.Tag);
-                var selectedCodes = _permissionService.CollectAllCheckedPermissionCodes(treeList1);
-                _permissionService.SaveRolePermissions(roleId, selectedCodes);
+                var selectedCodes = PermissionService.CollectAllCheckedPermissionCodes(treeList1);
+                PermissionService.SaveRolePermissions(roleId, selectedCodes);
 
                 XtraMessageBox.Show("权限保存成功！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }

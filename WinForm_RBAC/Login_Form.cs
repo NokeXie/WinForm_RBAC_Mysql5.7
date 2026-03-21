@@ -62,18 +62,22 @@ namespace WinForm_RBAC
 
             try
             {
-                using (var conn = new MySqlConnection(ConnectionString))
+                // --- 重要修正：先给全局变量赋值 ---
+                // 因为 PermissionService 内部会直接使用 GlobalInfo.ConnectionString
+                GlobalInfo.ConnectionString = this.ConnectionString;
+
+                // 现在调用 Service，它内部会自动去 GlobalInfo 拿连接
+                bool isAuthSuccess = await PermissionService.AuthenticateAndLoadPermissionsAsync(user, password);
+
+                if (isAuthSuccess)
                 {
-                    await conn.OpenAsync();
-
-                    bool isAuthSuccess = await AuthenticateAndLoadPermissionsAsync(conn, user, password);
-
-                    if (isAuthSuccess)
-                    {
-                        
-                        this.DialogResult = DialogResult.OK;
-                        this.Close();
-                    }
+                    this.DialogResult = DialogResult.OK;
+                    this.Close();
+                }
+                else
+                {
+                    // 可以在这里加个提示，如果 Service 内部没弹窗的话
+                    MessageBox.Show("用户名或密码错误！", "登录失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
             catch (MySqlException ex)
@@ -106,60 +110,5 @@ namespace WinForm_RBAC
             this.Cursor = isLoggingIn ? Cursors.WaitCursor : Cursors.Default;
         }
 
-        /// <summary>
-        /// 验证身份并加载权限
-        /// </summary>
-        private async Task<bool> AuthenticateAndLoadPermissionsAsync(MySqlConnection conn, string user, string password)
-        {
-            string passwordHash = PasswordHasher.HashPassword(password);
-
-            // 1. 验证用户
-            const string authSql = "SELECT UserID FROM Users WHERE UserName = @user AND PasswordHash = @hash AND Enable = 1";
-            object result;
-            using (var cmd = new MySqlCommand(authSql, conn))
-            {
-                cmd.Parameters.AddWithValue("@user", user);
-                cmd.Parameters.AddWithValue("@hash", passwordHash);
-                result = await cmd.ExecuteScalarAsync();
-            }
-
-            if (result == null)
-            {
-                MessageBox.Show("用户名或密码错误，或账号已被禁用！", "登录失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return false;
-            }
-
-            int userId = Convert.ToInt32(result);
-
-            // 2. 加载权限
-            const string permSql = @"
-                SELECT DISTINCT p.PermissionCode
-                FROM UserRoles ur
-                INNER JOIN RolePermissions rp ON ur.RoleID = rp.RoleID
-                INNER JOIN Permissions p ON rp.PermissionCode = p.PermissionCode
-                WHERE ur.UserID = @userId";
-
-            UserSession.Permissions.Clear();
-            using (var permCmd = new MySqlCommand(permSql, conn))
-            {
-                permCmd.Parameters.AddWithValue("@userId", userId);
-                using (var reader = await permCmd.ExecuteReaderAsync())
-                {
-                    while (await reader.ReadAsync())
-                    {
-                        UserSession.Permissions.Add(reader["PermissionCode"].ToString());
-                    }
-                }
-            }
-
-            if (UserSession.Permissions.Count == 0)
-            {
-                MessageBox.Show("您尚未被分配任何权限，请联系管理员。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            }
-
-            GlobalInfo.CurrentUserId = userId;
-            GlobalInfo.CurrentUserName = user;
-            return true;
-        }
     }
 }

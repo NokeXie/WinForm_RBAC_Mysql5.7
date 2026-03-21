@@ -11,7 +11,7 @@ namespace WinForm_RBAC
 {
     public class PermissionManager
     {
-        private readonly string _connectionString;
+       
         private readonly Form _parentForm;
 
         // 数据库字段常量，方便修改
@@ -26,7 +26,7 @@ namespace WinForm_RBAC
         public PermissionManager(Form parentForm, string connectionString)
         {
             _parentForm = parentForm;
-            _connectionString = connectionString;
+            GlobalInfo.ConnectionString = connectionString;
         }
 
         // =====================================================================
@@ -189,7 +189,7 @@ namespace WinForm_RBAC
 
             try
             {
-                using (var conn = new MySqlConnection(_connectionString))
+                using (var conn = new MySqlConnection(GlobalInfo.ConnectionString))
                 {
                     conn.Open();
 
@@ -230,7 +230,7 @@ namespace WinForm_RBAC
 
             try
             {
-                using (var conn = new MySqlConnection(_connectionString))
+                using (var conn = new MySqlConnection(GlobalInfo.ConnectionString))
                 {
                     conn.Open();
 

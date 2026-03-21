@@ -10,5 +10,8 @@
 
         // 存储当前登录用户的显示名称
         public static string CurrentUserName { get; set; }
+        public static string ConnectionString { get; set; }
+
+
     }
 }
