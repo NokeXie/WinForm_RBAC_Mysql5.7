@@ -21,10 +21,10 @@ namespace WinForm_RBAC
         // 可订阅日志/异常事件
         public event Action<string> OnLog;
 
-        public PermissionManager(Form parentForm, string connectionString)
+        public PermissionManager(Form parentForm)
         {
             _parentForm = parentForm;
-            GlobalInfo.ConnectionString = connectionString;
+            
         }
 
         // =====================================================================

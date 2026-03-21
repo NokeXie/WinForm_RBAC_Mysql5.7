@@ -53,7 +53,7 @@ namespace WinForm_RBAC
         private void Main_Form_Load(object sender, EventArgs e)
         {
             // 初始化权限管理器并同步/应用权限
-            var pm = new PermissionManager(this, _connString);
+            var pm = new PermissionManager(this);
 
             UIHelper.HideAllPages(xtraTabControl1);
             pm.ApplyPermissions();
@@ -716,7 +716,7 @@ namespace WinForm_RBAC
         /// </summary>
         private void simpleButton2_Click(object sender, EventArgs e)
         {
-            var pm = new PermissionManager(this, _connString);
+            var pm = new PermissionManager(this);
             pm.SyncModulesToDatabase();
             InitializeRoleManagement();
 
