@@ -13,7 +13,7 @@ namespace WinForm_RBAC
 {
     public partial class Main_Form : XtraForm
     {
-        #region --- 字段与构造函数 ---
+        #region --- 字段 ---
 
 
         public Main_Form()
@@ -782,7 +782,6 @@ namespace WinForm_RBAC
         }
 
         #endregion
-        // Main_Form.cs 中的计时器事件
-
+        
     }
 }
