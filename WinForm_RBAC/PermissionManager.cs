@@ -16,8 +16,6 @@ namespace WinForm_RBAC
 
         // 数据库字段常量，方便修改
         private const string ColPermissionCode = "PermissionCode";
-        private const string ColParentCode = "ParentCode";
-        private const string ColDescription = "Description";
         private const string TableName = "Permissions";
 
         // 可订阅日志/异常事件

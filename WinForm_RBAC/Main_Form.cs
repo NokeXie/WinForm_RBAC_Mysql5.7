@@ -55,7 +55,7 @@ namespace WinForm_RBAC
             // 初始化权限管理器并同步/应用权限
             var pm = new PermissionManager(this, _connString);
 
-            HideAllPage.HideAllPages(xtraTabControl1);
+            UIHelper.HideAllPages(xtraTabControl1);
             pm.ApplyPermissions();
         }
 

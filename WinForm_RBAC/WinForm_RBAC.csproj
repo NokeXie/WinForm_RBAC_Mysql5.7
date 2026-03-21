@@ -168,7 +168,6 @@
   <ItemGroup>
     <Compile Include="AESHelper.cs" />
     <Compile Include="GlobalInfo.cs" />
-    <Compile Include="HideAllPage.cs" />
     <Compile Include="PasswordHasher.cs" />
     <Compile Include="Login_Form.cs">
       <SubType>Form</SubType>
@@ -186,6 +185,7 @@
     <Compile Include="PermissionService.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UIHelper.cs" />
     <Compile Include="UserEditForm.cs">
       <SubType>Form</SubType>
     </Compile>
