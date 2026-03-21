@@ -82,6 +82,7 @@ namespace WinForm_RBAC
             this.layoutControlItem14 = new DevExpress.XtraLayout.LayoutControlItem();
             this.Root = new DevExpress.XtraLayout.LayoutControlGroup();
             this.layoutControlItem1 = new DevExpress.XtraLayout.LayoutControlItem();
+            this.checkStatusTimer = new System.Windows.Forms.Timer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.主菜单)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.layoutControl1)).BeginInit();
             this.layoutControl1.SuspendLayout();
@@ -644,6 +645,12 @@ namespace WinForm_RBAC
             this.layoutControlItem1.TextSize = new System.Drawing.Size(0, 0);
             this.layoutControlItem1.TextVisible = false;
             // 
+            // checkStatusTimer
+            // 
+            this.checkStatusTimer.Enabled = true;
+            this.checkStatusTimer.Interval = 30000;
+            this.checkStatusTimer.Tick += new System.EventHandler(this.checkStatusTimer_Tick);
+            // 
             // Main_Form
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -750,5 +757,6 @@ namespace WinForm_RBAC
         private DevExpress.XtraEditors.SimpleButton simpleButton6;
         private DevExpress.XtraLayout.LayoutControlItem layoutControlItem14;
         private DevExpress.XtraEditors.Repository.RepositoryItemCheckEdit repositoryItemCheckEdit1;
+        private System.Windows.Forms.Timer checkStatusTimer;
     }
 }

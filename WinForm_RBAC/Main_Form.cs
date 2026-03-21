@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace WinForm_RBAC
@@ -20,6 +21,11 @@ namespace WinForm_RBAC
         public Main_Form()
         {
             InitializeComponent();
+            // 手动初始化 Timer
+            checkStatusTimer = new Timer();
+            checkStatusTimer.Interval = 30000; // 30秒
+            checkStatusTimer.Tick += checkStatusTimer_Tick; // 绑定事件
+            checkStatusTimer.Start();
 
             // 手动绑定事件（如果设计器里没绑定的话）
             this.gridView1.CellValueChanged += gridView1_CellValueChanged;
@@ -723,6 +729,36 @@ namespace WinForm_RBAC
             XtraMessageBox.Show("权限模块刷新成功！", "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
+        private void checkStatusTimer_Tick(object sender, EventArgs e)
+        {
+            // 使用异步 Task 检查，防止 UI 界面在数据库连接时出现短暂卡顿
+            Task.Run(() =>
+            {
+                // 调用你刚才写好的方法
+                bool isInvalid = PermissionService.CheckIfKicked(GlobalInfo.CurrentUserId);
+
+                if (isInvalid)
+                {
+                    // 发现状态异常，切回主线程操作 UI
+                    this.Invoke(new Action(() =>
+                    {
+                        checkStatusTimer.Stop(); // 停止计时器，防止重复弹窗
+
+                        DevExpress.XtraEditors.XtraMessageBox.Show(
+                            "您的账号已被禁用或已不存在，系统将强制退出。",
+                            "安全警告",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Stop);
+
+                        // 强制关闭程序或返回登录页
+                        Application.Exit();
+                    }));
+                }
+            });
+        }
+
         #endregion
+        // Main_Form.cs 中的计时器事件
+
     }
 }

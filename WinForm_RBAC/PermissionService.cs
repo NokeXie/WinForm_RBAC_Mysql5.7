@@ -716,5 +716,43 @@ namespace WinForm_RBAC
                 throw new Exception("数据库连接或查询异常，请检查配置。", ex);
             }
         }
+     
+        /// <summary>
+        /// 检查当前用户状态：1.是否存在 2.是否被有效启用
+        /// 返回 true 表示该用户“非法”或“应被清除登录状态”，返回 false 表示状态正常
+        /// </summary>
+        public static bool CheckIfKicked(int userId)
+        {
+            try
+            {
+                using (var conn = new MySqlConnection(GlobalInfo.ConnectionString))
+                {
+                    conn.Open();
+                    // 只检查 Enable 字段
+                    const string sql = "SELECT Enable FROM Users WHERE UserID = @uid";
+                    using (var cmd = new MySqlCommand(sql, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@uid", userId);
+                        object result = cmd.ExecuteScalar();
+
+                        if (result != null && result != DBNull.Value)
+                        {
+                            // 如果 Enable 等于 1 则正常(false)，否则视为被踢出(true)
+                            return Convert.ToInt32(result) != 1;
+                        }
+                        else
+                        {
+                            // 查不到该用户，视为非法
+                            return true;
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // 数据库连接异常时，保守起见不强制踢出，或者根据你的安全要求返回 true
+                return false;
+            }
+        }
     }
 }
