@@ -10,13 +10,21 @@ using System.Windows.Forms;
 
 namespace WinForm_RBAC
 {
+    public enum LoginResult
+    {
+        Success,
+        InvalidCredentials,  // 用户名或密码错误
+        AccountDisabled,     // 账号被禁用
+        NoPermission,        // 未分配任何权限
+        UnknownError
+    }
     /// <summary>
     /// 权限与用户管理服务类：处理 RBAC 核心业务逻辑与数据库交互
     /// </summary>
     public class PermissionService
     {
         #region --- 1. 数据查询模块 (Query) ---
-
+        
         /// <summary> 从数据库获取所有角色信息 </summary>
         /// <returns> 包含 RoleID 和 RoleName 的 DataTable </returns>
         public static DataTable GetAllRoles()
@@ -391,7 +399,8 @@ namespace WinForm_RBAC
         #region --- 4. 身份验证与安全控制 (Security) ---
 
         /// <summary> 异步登录验证：验证通过后加载该用户的所有权限码到全局会话 </summary>
-        public static async Task<bool> AuthenticateAndLoadPermissionsAsync(string user, string password)
+        /// <summary> 异步登录验证：验证通过后加载该用户的所有权限码到全局会话 </summary>
+        public static async Task<LoginResult> AuthenticateAndLoadPermissionsAsync(string user, string password)
         {
             string passwordHash = PasswordHasher.HashPassword(password);
             try
@@ -399,22 +408,40 @@ namespace WinForm_RBAC
                 using (var conn = new MySqlConnection(GlobalInfo.ConnectionString))
                 {
                     await conn.OpenAsync();
-                    const string authSql = "SELECT UserID FROM Users WHERE UserName = @user AND PasswordHash = @hash AND Enable = 1";
-                    object result;
+
+                    // 第一步：只验证用户名 + 密码（不过滤 Enable），拿到用户基础信息
+                    const string authSql = @"
+                SELECT UserID, Enable
+                FROM Users
+                WHERE UserName = @user AND PasswordHash = @hash";
+
+                    int userId;
+                    bool isEnabled;
+
                     using (var cmd = new MySqlCommand(authSql, conn))
                     {
                         cmd.Parameters.AddWithValue("@user", user);
                         cmd.Parameters.AddWithValue("@hash", passwordHash);
-                        result = await cmd.ExecuteScalarAsync();
-                    }
-                    if (result == null) return false;
+                        using (var reader = await cmd.ExecuteReaderAsync())
+                        {
+                            if (!await reader.ReadAsync())
+                                return LoginResult.InvalidCredentials; // 用户名或密码错误
 
-                    int userId = Convert.ToInt32(result);
+                            userId = Convert.ToInt32(reader["UserID"]);
+                            isEnabled = Convert.ToInt32(reader["Enable"]) == 1;
+                        }
+                    }
+
+                    // 第二步：检查账号是否被禁用
+                    if (!isEnabled)
+                        return LoginResult.AccountDisabled;
+
+                    // 第三步：加载权限
                     const string permSql = @"
-                        SELECT DISTINCT p.PermissionCode FROM UserRoles ur
-                        INNER JOIN RolePermissions rp ON ur.RoleID = rp.RoleID
-                        INNER JOIN Permissions p ON rp.PermissionCode = p.PermissionCode
-                        WHERE ur.UserID = @userId";
+                SELECT DISTINCT p.PermissionCode FROM UserRoles ur
+                INNER JOIN RolePermissions rp ON ur.RoleID = rp.RoleID
+                INNER JOIN Permissions p ON rp.PermissionCode = p.PermissionCode
+                WHERE ur.UserID = @userId";
 
                     UserSession.Permissions.Clear();
                     using (var permCmd = new MySqlCommand(permSql, conn))
@@ -422,15 +449,24 @@ namespace WinForm_RBAC
                         permCmd.Parameters.AddWithValue("@userId", userId);
                         using (var reader = await permCmd.ExecuteReaderAsync())
                         {
-                            while (await reader.ReadAsync()) { UserSession.Permissions.Add(reader["PermissionCode"].ToString()); }
+                            while (await reader.ReadAsync())
+                                UserSession.Permissions.Add(reader["PermissionCode"].ToString());
                         }
                     }
+
+                    // 第四步：检查是否分配了权限
+                    if (UserSession.Permissions.Count == 0)
+                        return LoginResult.NoPermission;
+
                     GlobalInfo.CurrentUserId = userId;
                     GlobalInfo.CurrentUserName = user;
-                    return true;
+                    return LoginResult.Success;
                 }
             }
-            catch (Exception ex) { throw new Exception("数据库连接或查询异常，请检查配置。", ex); }
+            catch (Exception ex)
+            {
+                throw new Exception("数据库连接或查询异常，请检查配置。", ex);
+            }
         }
 
         /// <summary> 运行时检查用户是否被踢出（检查 Enable 状态是否变为 0 或账号被删） </summary>

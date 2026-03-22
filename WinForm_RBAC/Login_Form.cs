@@ -1,7 +1,6 @@
 ﻿using MySql.Data.MySqlClient;
 using System;
 using System.Configuration;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace WinForm_RBAC
@@ -83,12 +82,12 @@ namespace WinForm_RBAC
                 GlobalInfo.ConnectionString = this.ConnectionString;
 
                 // 3. 执行身份验证并加载该用户拥有的所有权限码
-                bool isAuthSuccess = await PermissionService.AuthenticateAndLoadPermissionsAsync(user, password);
+                LoginResult authResult = await PermissionService.AuthenticateAndLoadPermissionsAsync(user, password);
 
-                if (isAuthSuccess)
+                if (authResult == LoginResult.Success)
                 {
                     int userId = GlobalInfo.CurrentUserId;
-                    
+
                     // 4. 安全检查：防止暴力破解（登录频率限制）
                     if (PermissionService.IsLoginTooFrequent(userId, out int waitSec))
                     {
@@ -97,17 +96,15 @@ namespace WinForm_RBAC
                             "提示",
                             MessageBoxButtons.OK,
                             MessageBoxIcon.Warning);
-                        return; // 拦截并中断登录流程
+                        return;
                     }
 
                     // 5. 更新安全数据
                     PermissionService.UpdateLastLoginTime(userId);
-                    
-                    // 6. 处理单点登录 (SSO) 逻辑：生成并保存新的 Session Token
+
+                    // 6. 处理单点登录 (SSO) 逻辑
                     string myToken = Guid.NewGuid().ToString();
                     GlobalInfo.CurrentSessionToken = myToken;
-                    
-                    // 写入数据库。此操作会导致该用户在其他设备上的旧 Token 失效
                     PermissionService.UpdateUserToken(userId, myToken);
 
                     // 7. 登录成功，关闭窗体
@@ -116,7 +113,18 @@ namespace WinForm_RBAC
                 }
                 else
                 {
-                    MessageBox.Show("用户名或密码错误！", "登录失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    string msg;
+                    if (authResult == LoginResult.InvalidCredentials)
+                        msg = "用户名或密码错误，请重新输入。";
+                    else if (authResult == LoginResult.AccountDisabled)
+                        msg = "该账号已被禁用，请联系管理员。";
+                    else if (authResult == LoginResult.NoPermission)
+                        msg = "账号未分配任何权限，请联系管理员。";
+                    else
+                        msg = "登录失败，请联系管理员。";
+
+                    MessageBox.Show(msg, "登录失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    
                 }
             }
             catch (MySqlException ex)
