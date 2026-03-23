@@ -59,7 +59,7 @@ namespace WinForm_RBAC
         #region --- 3. UI 交互事件 (Events) ---
 
         /// <summary>
-        /// 登录按钮点击事件：执行异步身份验证、权限加载、单点登录校验及频率控制
+        /// 登录按钮点击事件：执行异步身份验证、权限加载、单点登录校验及频率控制.
         /// </summary>
         private async void Login_simpleButton_Click(object sender, EventArgs e)
         {
